@@ -1,90 +1,93 @@
 # ALP (Adaptive Learning Platform)
 
-ALP adalah aplikasi edukasi berbasis Flutter yang dirancang untuk mendukung pembelajaran adaptif. Aplikasi ini mendukung **Windows** dan **Android**, serta dilengkapi dengan berbagai fitur canggih seperti asisten AI dan sinkronisasi data peer-to-peer.
+ALP is a Flutter-based educational application designed to support adaptive learning. It supports both **Windows** and **Android** platforms and comes with advanced features such as an AI assistant and peer-to-peer data synchronization.
 
-## 🚀 Fitur Utama
+## 🚀 Key Features
 
-* **Asisten AI Cerdas**: Terintegrasi dengan Google Gemini untuk membantu proses belajar mengajar.
-* **Manajemen Multi-Peran**: Mendukung peran **Siswa** dan **Guru** dengan fitur yang disesuaikan.
-* **Sinkronisasi Offline (P2P)**: Memungkinkan pertukaran data antar perangkat menggunakan koneksi lokal dan QR Code (tanpa internet).
-* **Penyimpanan Lokal**: Menggunakan SQLite untuk penyimpanan data yang efisien dan aman.
-* **Multi-Platform**: Dapat berjalan dengan mulus di perangkat Android dan Desktop Windows.
-* **Keamanan**: Autentikasi pengguna yang aman.
+* **Smart AI Assistant**: Integrated with Google Gemini to assist in the teaching and learning process.
+* **Multi-Role Management**: Supports **Student** and **Teacher** roles with tailored features.
+* **Offline Synchronization (P2P)**: Enables data exchange between devices using local connections and QR Codes (without internet).
+* **Local Storage**: Uses SQLite for efficient and secure data storage.
+* **Multi-Platform**: Runs seamlessly on Android devices and Windows Desktops.
+* **Security**: Secure user authentication.
 
-## 🛠️ Prasyarat
+## 🛠️ Prerequisites
 
-Sebelum memulai, pastikan Anda telah menginstal:
+Before you begin, ensure you have the following installed:
 
-1. **Flutter SDK** (Versi terbaru disarankan, minimal 3.10.x).
-2. **Editor Kode**: VS Code atau Android Studio.
-3. **Untuk Android**:
-    * Android SDK & Tools.
-    * Emulator Android atau Perangkat Fisik (dengan USB Debugging aktif).
-4. **Untuk Windows**:
-    * Visual Studio 2022 (Community Edition cukup).
-    * Workload **"Desktop development with C++"** harus diinstal.
+1. **Flutter SDK** (Latest version recommended, minimum 3.10.x).
+2. **Visual Studio Code (VS Code)**.
+3. **VS Code Extensions**:
+    * [Flutter](https://marketplace.visualstudio.com/items?itemName=Dart-Code.flutter)
+    * [Dart](https://marketplace.visualstudio.com/items?itemName=Dart-Code.dart-code)
+4. **For Android**:
+    * Android SDK & Tools (usually installed via Android Studio Setup or command line tools).
+    * Android Emulator or Physical Device (with USB Debugging enabled).
+5. **For Windows**:
+    * Visual Studio 2022 (Community Edition is sufficient).
+    * **"Desktop development with C++"** workload must be installed.
 
-## 📦 Instalasi
+## 📦 Installation & Setup
 
-1. **Clone Repositori** (jika menggunakan git):
-
-    ```bash
-    git clone <repository_url>
-    cd alp
-    ```
-
-2. **Instal Dependensi**:
-    Jalankan perintah berikut di terminal proyek Anda untuk mengunduh semua paket yang diperlukan:
+1. **Clone the Repository**:
+    Open your terminal or command prompt and run:
 
     ```bash
-    flutter pub get
+    git clone https://github.com/ade-karya/alp-flutter.git
+    cd alp-flutter
     ```
 
-## ▶️ Cara Menjalankan Aplikasi
+2. **Open in VS Code**:
+    Open the cloned folder in Visual Studio Code.
 
-### 📱 Android
+3. **Install Dependencies**:
+    * Open the integrated terminal in VS Code (`Ctrl +` ` ` `).
+    * Run the following command:
 
-1. Pastikan emulator berjalan atau perangkat fisik Anda terhubung.
-2. Cek perangkat yang terhubung:
+        ```bash
+        flutter pub get
+        ```
 
-    ```bash
-    flutter devices
-    ```
+    * Alternatively, when you open `pubspec.yaml`, VS Code often prompts you to "Get Packages". You can click that button.
 
-3. Jalankan aplikasi:
+## ▶️ How to Run (VS Code Guide)
 
-    ```bash
-    flutter run
-    ```
+### 1. Select Your Device
 
-    Jika ada lebih dari satu perangkat, gunakan flag `-d`:
+* Look at the bottom right corner of the VS Code status bar. You should see the currently selected device (e.g., "Windows (windows-x64)" or "Pixel 4a").
+* Click on it to change the target device (select an Android emulator/device or Windows).
 
-    ```bash
-    flutter run -d <device_id>
-    ```
+### 2. Run the Application
 
-### 💻 Windows
+* Open `lib/main.dart`.
+* Press **F5** on your keyboard to start debugging.
+* Or, go to the top menu: **Run** > **Start Debugging**.
 
-1. Pastikan Anda telah menginstal Visual Studio dengan komponen C++ yang tepat.
-2. Aktifkan **Developer Mode** di pengaturan Windows Anda (Settings > Update & Security > For developers).
-3. Jalankan aplikasi dengan target Windows:
+### 📱 Running on Android
 
-    ```bash
-    flutter run -d windows
-    ```
+* Ensure your emulator is running or your physical device is connected.
+* Select the Android device in the VS Code status bar.
+* Press **F5**.
 
-## 🏗️ Struktur Proyek
+### 💻 Running on Windows
 
-Proyek ini dibuat menggunakan **Clean Architecture** dan pola **BLoC** untuk manajemen state.
+* **Important**: Ensure Developer Mode is enabled in Windows Settings (Settings > Update & Security > For developers).
+* Select "Windows" in the VS Code status bar.
+* Press **F5**.
 
-* `lib/core`: Komponen inti, utilitas, dan konfigurasi dasar.
-* `lib/features`: Modul fitur utama (Auth, Student, Teacher, Network, AI Assistant, dll).
-* `lib/main.dart`: Titik masuk aplikasi.
+## 🏗️ Project Structure
 
-## 🔧 Pemecahan Masalah (Troubleshooting)
+This project follows **Clean Architecture** and uses the **BLoC** pattern for state management.
 
-* **Masalah Database di Windows**: Jika Anda menemui masalah terkait `sqlite3.dll` di Windows, pastikan build tool C++ terinstal dengan benar melalui Visual Studio.
-* **Koneksi P2P**: Untuk fitur sinkronisasi, pastikan kedua perangkat terhubung ke jaringan Wi-Fi yang sama atau salah satu perangkat mengaktifkan Hotspot.
+* `lib/core`: Core components, utilities, and base configurations.
+* `lib/features`: Main feature modules (Auth, Student, Teacher, Network, AI Assistant, etc.).
+* `lib/main.dart`: Application entry point.
+
+## 🔧 Troubleshooting
+
+* **Windows Database Issues**: If you encounter errors related to `sqlite3.dll` on Windows, ensure the C++ build tools are correctly installed via Visual Studio.
+* **P2P Connection**: For synchronization, ensure both devices are on the same Wi-Fi network or one device has Hotspot enabled.
+* **VS Code Device Not Showing**: If no device is shown, try running `flutter doctor` in the terminal to diagnose environment issues.
 
 ---
-Dikembangkan dengan ❤️ menggunakan Flutter.
+Developed with ❤️ using Flutter.
