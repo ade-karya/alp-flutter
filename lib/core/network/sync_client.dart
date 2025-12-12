@@ -50,6 +50,7 @@ class SyncClient {
     required int classId,
     required int studentId,
     required String studentName,
+    required String studentIdentifier,
   }) async {
     try {
       final response = await http
@@ -60,6 +61,7 @@ class SyncClient {
               'class_id': classId,
               'student_id': studentId,
               'student_name': studentName,
+              'student_identifier': studentIdentifier,
             }),
           )
           .timeout(const Duration(seconds: 10));

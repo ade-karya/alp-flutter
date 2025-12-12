@@ -114,13 +114,13 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
           SliverAppBar(
             expandedHeight: 200,
             pinned: true,
-            backgroundColor: Colors.teal[700],
+            backgroundColor: Colors.blue[700],
             iconTheme: const IconThemeData(color: Colors.white),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.teal[400]!, Colors.teal[700]!],
+                    colors: [Colors.blue[400]!, Colors.blue[700]!],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -240,10 +240,10 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.teal.withAlpha(25),
+              color: Colors.blue.withAlpha(25),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.assignment, size: 64, color: Colors.teal),
+            child: const Icon(Icons.assignment, size: 64, color: Colors.blue),
           ),
           const SizedBox(height: 24),
           const Text(

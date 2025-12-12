@@ -81,12 +81,10 @@ class AuthCubit extends Cubit<AuthState> {
       }
 
       // 4. CHECK USER EXISTENCE (Enforce User Selection on Startup)
-      // We explicitly DO NOT check for a stored current_user_id here.
-      // This ensures that on every cold start, the user is presented with the
-      // User Selection screen (if users exist) to re-authenticate (PIN),
-      // fulfilling the requirement: "Show list of users if data exists".
+      // We check for a stored current_user_id here.
+      // This ensures that on cold start, if a user was previously logged in,
+      // they are automatically authenticated.
 
-      /* AUTO-LOGIN DISABLED
       final userId = prefs.getInt(_currentUserIdKey);
 
       if (userId != null) {
@@ -96,7 +94,6 @@ class AuthCubit extends Cubit<AuthState> {
           return;
         }
       }
-      */
 
       emit(Unauthenticated(hasUsers: hasUsers));
     } catch (e) {

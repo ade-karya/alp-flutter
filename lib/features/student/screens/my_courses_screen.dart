@@ -256,7 +256,7 @@ class _MyCoursesScreenState extends State<_MyCoursesView> {
             ),
           ],
         ),
-        bottomNavigationBar: _buildBottomBar(context),
+        bottomNavigationBar: _courses.isEmpty ? null : _buildBottomBar(context),
       ),
     );
   }
@@ -341,10 +341,10 @@ class _MyCoursesScreenState extends State<_MyCoursesView> {
         final course = _courses[index];
         final colors = [
           [Colors.blue[400]!, Colors.blue[700]!],
-          [Colors.purple[400]!, Colors.purple[700]!],
+          [Colors.indigo[400]!, Colors.indigo[700]!],
+          [Colors.cyan[400]!, Colors.cyan[700]!],
           [Colors.teal[400]!, Colors.teal[700]!],
-          [Colors.orange[400]!, Colors.orange[700]!],
-          [Colors.pink[400]!, Colors.pink[700]!],
+          [Colors.deepPurple[400]!, Colors.deepPurple[700]!],
         ];
         final colorPair = colors[index % colors.length];
 

@@ -101,7 +101,7 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.purple[400]!, Colors.purple[700]!],
+                  colors: [Colors.blue[400]!, Colors.blue[700]!],
                 ),
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -155,14 +155,14 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.purple[300]!, Colors.purple[600]!],
+                colors: [Colors.blue[300]!, Colors.blue[600]!],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.purple.withAlpha(100),
+                  color: Colors.blue.withAlpha(100),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -211,12 +211,12 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.purple.withAlpha(25),
+                            color: Colors.blue.withAlpha(25),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(
                             Icons.lightbulb_outline,
-                            color: Colors.purple,
+                            color: Colors.blue,
                             size: 20,
                           ),
                         ),
@@ -269,7 +269,7 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                     gradient: LinearGradient(
                       colors: isError
                           ? [Colors.red[300]!, Colors.red[600]!]
-                          : [Colors.purple[300]!, Colors.purple[600]!],
+                          : [Colors.blue[300]!, Colors.blue[600]!],
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -286,7 +286,7 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: isUser
-                        ? Colors.purple
+                        ? Colors.blue
                         : isError
                         ? Colors.red.withAlpha(25)
                         : Colors.white,
@@ -350,7 +350,7 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.purple[300]!, Colors.purple[600]!],
+                colors: [Colors.blue[300]!, Colors.blue[600]!],
               ),
               borderRadius: BorderRadius.circular(10),
             ),
@@ -389,7 +389,7 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
           width: 8,
           height: 8,
           decoration: BoxDecoration(
-            color: Colors.purple.withAlpha((value * 255).toInt()),
+            color: Colors.blue.withAlpha((value * 255).toInt()),
             shape: BoxShape.circle,
           ),
         );
@@ -440,12 +440,12 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.purple[400]!, Colors.purple[700]!],
+                  colors: [Colors.blue[400]!, Colors.blue[700]!],
                 ),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.purple.withAlpha(100),
+                    color: Colors.blue.withAlpha(100),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),

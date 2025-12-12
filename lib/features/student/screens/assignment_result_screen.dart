@@ -378,7 +378,7 @@ class _AssignmentResultScreenState extends State<AssignmentResultScreen> {
                                     : studentAns.isEmpty
                                     ? Colors.grey.withAlpha(15)
                                     : Colors.red.withAlpha(25))
-                              : Colors.purple.withAlpha(15),
+                              : Colors.indigo.withAlpha(15),
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(14),
                           ),
@@ -395,7 +395,7 @@ class _AssignmentResultScreenState extends State<AssignmentResultScreen> {
                                           : studentAns.isEmpty
                                           ? Colors.grey
                                           : Colors.red)
-                                    : Colors.purple,
+                                    : Colors.indigo,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Center(
@@ -417,7 +417,7 @@ class _AssignmentResultScreenState extends State<AssignmentResultScreen> {
                               decoration: BoxDecoration(
                                 color: isMC
                                     ? Colors.blue.withAlpha(25)
-                                    : Colors.purple.withAlpha(25),
+                                    : Colors.indigo.withAlpha(25),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -425,7 +425,7 @@ class _AssignmentResultScreenState extends State<AssignmentResultScreen> {
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
-                                  color: isMC ? Colors.blue : Colors.purple,
+                                  color: isMC ? Colors.blue : Colors.indigo,
                                 ),
                               ),
                             ),

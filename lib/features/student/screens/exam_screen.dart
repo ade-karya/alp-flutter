@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_cubit.dart';
 import '../../../core/database/database_helper.dart';
+import '../../../core/network/network_cubit.dart';
+import '../../../core/network/sync_client.dart';
 
 class ExamScreen extends StatefulWidget {
   final int assignmentId;
@@ -107,6 +109,7 @@ class _ExamScreenState extends State<ExamScreen> {
         : 0.0;
 
     try {
+      // 1. Save to Local Database (Always do this first for safety)
       await db.createSubmission(
         assignmentId: widget.assignmentId,
         studentId: user.id!,
@@ -114,15 +117,50 @@ class _ExamScreenState extends State<ExamScreen> {
         initialScore: finalScore,
       );
 
+      // 2. Attempt to Sync with Teacher (P2P)
+      bool synced = false;
+      String feedbackMessage = 'Disimpan di HP saja (Offline).';
+
+      if (mounted) {
+        final networkCubit = context.read<NetworkCubit>();
+        final teacherPeers = networkCubit.getTeacherPeers();
+
+        for (final peer in teacherPeers) {
+          final host = peer['host'];
+          if (host != null) {
+            final client = SyncClient(host: host, port: 3000);
+            if (await client.ping()) {
+              // Prepare answers list for API
+              final answersList = _answers.entries
+                  .map((e) => {'question_id': e.key, 'answer': e.value})
+                  .toList();
+
+              final remoteId = await client.submitAnswers(
+                assignmentId: widget.assignmentId,
+                studentId: user.id!,
+                answers: answersList,
+              );
+
+              if (remoteId != null) {
+                synced = true;
+                feedbackMessage = 'Berhasil dikirim ke Guru!';
+                break; // Stop after first successful upload
+              }
+            }
+          }
+        }
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               auto
-                  ? 'Waktu habis! Ujian telah dikumpulkan.'
-                  : 'Ujian berhasil dikumpulkan!',
+                  ? 'Waktu habis! $feedbackMessage'
+                  : 'Selesai! $feedbackMessage',
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: synced ? Colors.green : Colors.orange,
+            duration: const Duration(seconds: 4),
           ),
         );
         final classId = _assignment!['class_id'];
@@ -302,7 +340,7 @@ class _ExamScreenState extends State<ExamScreen> {
                           decoration: BoxDecoration(
                             color: isMC
                                 ? Colors.blue.withAlpha(25)
-                                : Colors.purple.withAlpha(25),
+                                : Colors.indigo.withAlpha(25),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -310,7 +348,7 @@ class _ExamScreenState extends State<ExamScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: isMC ? Colors.blue : Colors.purple,
+                              color: isMC ? Colors.blue : Colors.indigo,
                             ),
                           ),
                         ),

@@ -1,9 +1,15 @@
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'dart:io';
+import 'dart:async';
 import '../auth/models/user_model.dart';
 
 class DatabaseHelper {
+  // Stream to notify listeners about class data changes (members, assignments, etc.)
+  // Emits the classId that was updated.
+  final _classUpdateController = StreamController<int>.broadcast();
+  Stream<int> get onClassUpdate => _classUpdateController.stream;
+
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
 
@@ -471,7 +477,7 @@ class DatabaseHelper {
     required List<int> questionIds,
   }) async {
     final db = await database;
-    return await db.transaction((txn) async {
+    final result = await db.transaction((txn) async {
       final assignmentId = await txn.insert('assignments', {
         'teacher_id': teacherId,
         'class_id': classId,
@@ -490,6 +496,11 @@ class DatabaseHelper {
       }
       return assignmentId;
     });
+
+    // Notify listeners
+    _classUpdateController.add(classId);
+
+    return result;
   }
 
   Future<List<Map<String, dynamic>>> getAssignmentsForClass(int classId) async {
@@ -638,18 +649,31 @@ class DatabaseHelper {
     required int classId,
     required int studentId,
     required String studentName,
+    String? studentIdentifier,
   }) async {
     final db = await database;
+    int localStudentId = studentId;
 
-    // Check if enrollment already exists
-    final existing = await db.query(
-      'class_members',
-      where: 'class_id = ? AND student_id = ?',
-      whereArgs: [classId, studentId],
-    );
-
-    if (existing.isEmpty) {
-      // Check if student exists in users table, if not create a remote reference
+    // 1. Resolve Student ID locally using Identifier (to avoid ID conflicts)
+    if (studentIdentifier != null) {
+      final existingUser = await getUserByIdentifier(studentIdentifier);
+      if (existingUser != null) {
+        if (existingUser.id != null) {
+          localStudentId = existingUser.id!;
+        }
+      } else {
+        // Create new remote student record
+        localStudentId = await db.insert('users', {
+          'name': studentName,
+          'identifier': studentIdentifier,
+          'role': 'student',
+          'dateOfBirth': DateTime.now().toIso8601String(), // Default
+          'apiKey': '',
+          'createdAt': DateTime.now().toIso8601String(),
+        });
+      }
+    } else {
+      // Fallback: Check if ID exists, if not create dummy
       final student = await db.query(
         'users',
         where: 'id = ?',
@@ -663,19 +687,41 @@ class DatabaseHelper {
           'name': studentName,
           'identifier': 'remote_$studentId',
           'role': 'student',
-          'dateOfBirth': '', // Placeholder
+          'dateOfBirth': DateTime.now().toIso8601String(),
           'apiKey': '',
           'createdAt': DateTime.now().toIso8601String(),
         }, conflictAlgorithm: ConflictAlgorithm.ignore);
       }
+    }
 
+    // Check if enrollment already exists with LOCAL ID
+    final existing = await db.query(
+      'class_members',
+      where: 'class_id = ? AND student_id = ?',
+      whereArgs: [classId, localStudentId],
+    );
+
+    if (existing.isEmpty) {
       // Create enrollment
       await db.insert('class_members', {
         'class_id': classId,
-        'student_id': studentId,
+        'student_id': localStudentId,
         'joined_at': DateTime.now().toIso8601String(),
       });
+
+      // Notify listeners
+      _classUpdateController.add(classId);
     }
+  }
+
+  Future<void> removeStudentFromClass(int classId, int studentId) async {
+    final db = await database;
+    await db.delete(
+      'class_members',
+      where: 'class_id = ? AND student_id = ?',
+      whereArgs: [classId, studentId],
+    );
+    _classUpdateController.add(classId);
   }
 
   /// Get all assignments for a class (for P2P sync)

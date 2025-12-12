@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -17,6 +18,7 @@ class ClassDetailScreen extends StatefulWidget {
 class _ClassDetailScreenState extends State<ClassDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late StreamSubscription _dbSubscription;
   ClassModel? _class;
   List<Map<String, dynamic>> _members = [];
   List<Map<String, dynamic>> _assignments = [];
@@ -27,6 +29,13 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadData();
+
+    // Listen for database updates (e.g. student joining via P2P)
+    _dbSubscription = DatabaseHelper.instance.onClassUpdate.listen((id) {
+      if (id == widget.classId && mounted) {
+        _loadData();
+      }
+    });
   }
 
   @override
@@ -38,7 +47,16 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+    // Only show loading indicator on first load or manual refresh
+    // For background updates, we can update silently or show a small indicator
+    // But since _loadData calls setState, it might be jarring if it flickers.
+    // Let's keep existing logic but maybe optimize later.
+    // For now, if we are already loaded, maybe don't set isLoading=true?
+
+    if (_class == null) {
+      setState(() => _isLoading = true);
+    }
+
     final db = DatabaseHelper.instance;
 
     final database = await db.database;
@@ -49,19 +67,27 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
     );
 
     if (classRes.isNotEmpty) {
-      _class = ClassModel.fromMap(classRes.first);
-      _members = await db.getClassMembers(widget.classId);
-      _assignments = await db.getAssignmentsForClass(widget.classId);
-    }
+      final newClass = ClassModel.fromMap(classRes.first);
+      final newMembers = await db.getClassMembers(widget.classId);
+      final newAssignments = await db.getAssignmentsForClass(widget.classId);
 
-    if (mounted) {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _class = newClass;
+          _members = newMembers;
+          _assignments = newAssignments;
+          _isLoading = false;
+        });
+      }
+    } else {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _dbSubscription.cancel();
     super.dispose();
   }
 
@@ -340,27 +366,106 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
               m['identifier'],
               style: TextStyle(color: Colors.grey[600], fontSize: 12),
             ),
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.green.withAlpha(25),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                DateFormat(
-                  'dd MMM yyyy',
-                ).format(DateTime.parse(m['joined_at'])),
-                style: const TextStyle(
-                  color: Colors.green,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withAlpha(25),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    DateFormat(
+                      'dd MMM yyyy',
+                    ).format(DateTime.parse(m['joined_at'])),
+                    style: const TextStyle(
+                      color: Colors.green,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(
+                    Icons.person_remove_outlined,
+                    color: Colors.red,
+                  ),
+                  onPressed: () => _confirmUnenrollStudent(
+                    m['student_id'] ?? m['id'],
+                    m['name'],
+                  ),
+                ),
+              ],
             ),
           ),
         );
       },
     );
+  }
+
+  Future<void> _confirmUnenrollStudent(
+    int studentId,
+    String studentName,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.red.withAlpha(25),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.person_remove, color: Colors.red),
+            ),
+            const SizedBox(width: 12),
+            const Text('Keluarkan Siswa?'),
+          ],
+        ),
+        content: Text(
+          'Apakah Anda yakin ingin mengeluarkan "$studentName" dari kelas ini?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text('Keluarkan'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await DatabaseHelper.instance.removeStudentFromClass(
+        widget.classId,
+        studentId,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('"$studentName" berhasil dikeluarkan'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      // Auto-refresh handled by listener
+    }
   }
 
   Widget _buildAssignmentsTab(AppLocalizations l10n) {

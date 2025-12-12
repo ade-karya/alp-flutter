@@ -29,7 +29,19 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.aiAssistantTitle)),
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: Text(
+          l10n.aiAssistantTitle,
+          style: const TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
+      ),
       drawer: const AppDrawer(),
       body: BlocBuilder<SettingsCubit, SettingsState>(
         builder: (context, state) {
@@ -41,16 +53,37 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
             padding: const EdgeInsets.all(16),
             children: [
               // Active Provider Card
-              Card(
-                color: Theme.of(context).colorScheme.primaryContainer,
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue[400]!, Colors.blue[700]!],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.withAlpha(100),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   child: Row(
                     children: [
-                      Icon(
-                        _getProviderIcon(state.activeProviderType),
-                        size: 32,
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha(50),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          _getProviderIcon(state.activeProviderType),
+                          size: 32,
+                          color: Colors.white,
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -60,21 +93,17 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                             Text(
                               l10n.activeProvider,
                               style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onPrimaryContainer
-                                    .withValues(alpha: 0.7),
+                                fontSize: 13,
+                                color: Colors.white.withAlpha(200),
                               ),
                             ),
+                            const SizedBox(height: 4),
                             Text(
                               state.activeProviderType.displayName,
-                              style: TextStyle(
-                                fontSize: 18,
+                              style: const TextStyle(
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onPrimaryContainer,
+                                color: Colors.white,
                               ),
                             ),
                           ],
@@ -111,49 +140,81 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
     final isExpanded = _expandedProvider == type;
     final isActive = state.activeProviderType == type;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withAlpha(25),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: isActive
+            ? Border.all(color: Colors.blue.withAlpha(100), width: 2)
+            : null,
+      ),
       child: Column(
         children: [
           ListTile(
-            leading: Icon(
-              _getProviderIcon(type),
-              color: isActive ? Theme.of(context).colorScheme.primary : null,
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? Colors.blue.withAlpha(25)
+                    : Colors.grey.withAlpha(15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                _getProviderIcon(type),
+                color: isActive ? Colors.blue : Colors.grey[600],
+                size: 24,
+              ),
             ),
             title: Text(
               type.displayName,
               style: TextStyle(
                 fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                fontSize: 16,
               ),
             ),
             subtitle: provider.apiKey.isNotEmpty
                 ? Text(
                     'API Key: ••••${provider.apiKey.length > 4 ? provider.apiKey.substring(provider.apiKey.length - 4) : ""}',
+                    style: TextStyle(color: Colors.grey[600]),
                   )
-                : Text(l10n.noApiKey),
+                : Text(
+                    l10n.noApiKey,
+                    style: TextStyle(color: Colors.grey[500]),
+                  ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (isActive)
-                  Chip(
-                    label: Text(l10n.active),
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.primaryContainer,
-                    labelStyle: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      fontSize: 12,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withAlpha(25),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      l10n.active,
+                      style: const TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
-                IconButton(
-                  icon: Icon(
-                    isExpanded ? Icons.expand_less : Icons.expand_more,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _expandedProvider = isExpanded ? null : type;
-                    });
-                  },
+                const SizedBox(width: 8),
+                Icon(
+                  isExpanded ? Icons.expand_less : Icons.expand_more,
+                  color: Colors.grey[400],
                 ),
               ],
             ),
@@ -196,7 +257,19 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
             controller: urlController,
             decoration: InputDecoration(
               labelText: l10n.labelBaseUrl,
-              border: const OutlineInputBorder(),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.blue, width: 2),
+              ),
+              filled: true,
+              fillColor: Colors.grey[50],
               hintText: provider.type.defaultBaseUrl,
             ),
             onChanged: (value) => _localUrls[provider.type] = value,
@@ -206,7 +279,19 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
             controller: apiKeyController,
             decoration: InputDecoration(
               labelText: l10n.labelApiKey,
-              border: const OutlineInputBorder(),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.blue, width: 2),
+              ),
+              filled: true,
+              fillColor: Colors.grey[50],
               suffixIcon: IconButton(
                 icon: const Icon(Icons.visibility_off),
                 onPressed: () {},
@@ -228,7 +313,22 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                   isExpanded: true,
                   decoration: InputDecoration(
                     labelText: l10n.labelModel,
-                    border: const OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Colors.blue,
+                        width: 2,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[50],
                   ),
                   items: () {
                     final current =
@@ -308,6 +408,14 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                   },
                   icon: const Icon(Icons.refresh),
                   label: Text(l10n.resetUrl),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: const BorderSide(color: Colors.blue),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -339,6 +447,14 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                   },
                   icon: const Icon(Icons.check),
                   label: Text(l10n.saveAndActivate),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
             ],

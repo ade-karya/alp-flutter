@@ -20,9 +20,16 @@ class NetworkInitial extends NetworkState {}
 class NetworkScanning extends NetworkState {
   final List<Map<String, String>> peers;
   final String? serverIp;
-  const NetworkScanning(this.peers, {this.serverIp});
+  final List<Map<String, String>> availableInterfaces;
+
+  const NetworkScanning(
+    this.peers, {
+    this.serverIp,
+    this.availableInterfaces = const [],
+  });
+
   @override
-  List<Object> get props => [peers, serverIp ?? ''];
+  List<Object> get props => [peers, serverIp ?? '', availableInterfaces];
 }
 
 class NetworkDisabled extends NetworkState {}
@@ -33,6 +40,7 @@ class NetworkCubit extends Cubit<NetworkState> {
   StreamSubscription? _subscription;
   SyncServer? _syncServer;
   String? _serverIp;
+  List<Map<String, String>> _availableInterfaces = [];
 
   // Manual peers list (added by IP)
   final List<Map<String, String>> _manualPeers = [];
@@ -43,6 +51,7 @@ class NetworkCubit extends Cubit<NetworkState> {
 
   String? get serverIp => _serverIp;
   bool get isServerRunning => _syncServer?.isRunning ?? false;
+  List<Map<String, String>> get availableInterfaces => _availableInterfaces;
 
   Future<void> start(User user) async {
     debugPrint(
@@ -50,8 +59,14 @@ class NetworkCubit extends Cubit<NetworkState> {
     );
 
     try {
+      // 0. Load available interfaces first
+      _availableInterfaces = await _service.getAllNetworkInterfaces();
+      if (_availableInterfaces.isNotEmpty) {
+        // Default to the first one (usually WiFi based on sort)
+        _serverIp = _availableInterfaces.first['ip'];
+      }
+
       // 1. Skip mDNS broadcast on Windows (has platform bugs)
-      // On mobile platforms, broadcast works fine
       if (!Platform.isWindows) {
         debugPrint('Starting mDNS broadcast...');
         await _service.startBroadcast(user);
@@ -66,17 +81,32 @@ class NetworkCubit extends Cubit<NetworkState> {
       if (user.role == UserRole.teacher && user.id != null) {
         debugPrint('Starting sync server for teacher...');
         _syncServer = SyncServer(teacherId: user.id!);
-        _serverIp = await _syncServer!.start();
-        if (_serverIp != null) {
-          debugPrint('Sync server started at $_serverIp:3000');
+        // We bind to 0.0.0.0 (all interfaces) so selection is just for display
+        final boundIp = await _syncServer!.start();
+
+        if (boundIp != null) {
+          debugPrint('Sync server started at $boundIp:3000');
+          // If auto-detected IP is different and valid, add it or use it
+          _serverIp ??= boundIp;
+
+          // Ensure boundIp is in availableInterfaces so dropdown works
+          if (!_availableInterfaces.any((i) => i['ip'] == boundIp)) {
+            _availableInterfaces.insert(0, {
+              'ip': boundIp,
+              'name': 'Auto-detected Interface',
+              'score': '1000',
+            });
+            // Update _serverIp to match this valid interface
+            _serverIp = boundIp;
+          }
         } else {
           debugPrint('Sync server failed to start');
         }
       }
 
-      // 3. Emit scanning state immediately with any existing manual peers
+      // 3. Emit scanning state immediately
       debugPrint('Emitting NetworkScanning state...');
-      emit(NetworkScanning(_getAllPeers(), serverIp: _serverIp));
+      _emitScanning();
       debugPrint('NetworkScanning state emitted');
 
       // 4. Discover others via mDNS (skip on Windows)
@@ -87,7 +117,7 @@ class NetworkCubit extends Cubit<NetworkState> {
               .where((p) => p['identifier'] != user.identifier)
               .toList();
           debugPrint('Discovered ${_discoveredPeers.length} peers via mDNS');
-          emit(NetworkScanning(_getAllPeers(), serverIp: _serverIp));
+          _emitScanning();
         });
         debugPrint('Discovery started');
       } else {
@@ -98,6 +128,33 @@ class NetworkCubit extends Cubit<NetworkState> {
       debugPrint('Stack: $stack');
       emit(NetworkDisabled());
     }
+  }
+
+  Future<void> toggleServer(bool enable, User user) async {
+    if (enable) {
+      await start(user);
+    } else {
+      await stop();
+      // Emitting disabled state ensures UI reflects the 'OFF' state
+      emit(NetworkDisabled());
+    }
+  }
+
+  void selectInterface(String ip) {
+    if (_availableInterfaces.any((i) => i['ip'] == ip)) {
+      _serverIp = ip;
+      _emitScanning();
+    }
+  }
+
+  void _emitScanning() {
+    emit(
+      NetworkScanning(
+        _getAllPeers(),
+        serverIp: _serverIp,
+        availableInterfaces: _availableInterfaces,
+      ),
+    );
   }
 
   /// Combine manual + discovered peers
@@ -153,7 +210,7 @@ class NetworkCubit extends Cubit<NetworkState> {
 
       // Emit updated state
       if (state is NetworkScanning) {
-        emit(NetworkScanning(_getAllPeers(), serverIp: _serverIp));
+        _emitScanning();
       }
 
       return true;
@@ -167,7 +224,7 @@ class NetworkCubit extends Cubit<NetworkState> {
   void removeManualPeer(String ipAddress) {
     _manualPeers.removeWhere((p) => p['host'] == ipAddress);
     if (state is NetworkScanning) {
-      emit(NetworkScanning(_getAllPeers(), serverIp: _serverIp));
+      _emitScanning();
     }
   }
 

@@ -135,9 +135,52 @@ class UserSelectionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(l10n.usTitle),
+        backgroundColor: Colors.white,
+        elevation: 0,
         automaticallyImplyLeading: false,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.red[700],
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(8),
+                  bottomLeft: Radius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Sikolah',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.green[700],
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(8),
+                  bottomRight: Radius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Apps',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
       body: BlocBuilder<AuthCubit, AuthState>(
         builder: (context, state) {
@@ -158,94 +201,133 @@ class UserSelectionScreen extends StatelessWidget {
 
               final users = snapshot.data ?? [];
 
-              return Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (users.isEmpty)
-                      Expanded(
-                        child: Center(
-                          child: Text(
-                            l10n.usNoUsers,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              color: Colors.grey,
+              return Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 800),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'Pilih Pengguna',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Silakan pilih akun untuk masuk',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        if (users.isEmpty)
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                l10n.usNoUsers,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                          )
+                        else
+                          Expanded(
+                            child: GridView.builder(
+                              gridDelegate:
+                                  const SliverGridDelegateWithMaxCrossAxisExtent(
+                                    maxCrossAxisExtent: 400,
+                                    mainAxisExtent:
+                                        160, // Increased height to prevent overflow
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
+                                  ),
+                              itemCount: users.length,
+                              itemBuilder: (context, index) {
+                                final user = users[index];
+                                return _UserCard(
+                                  user: user,
+                                  onTap: () async {
+                                    // Check if user has PIN
+                                    if (user.pin == null || user.pin!.isEmpty) {
+                                      // Force user to set PIN
+                                      if (!context.mounted) return;
+                                      await _showSetPinDialog(context, user);
+                                    } else {
+                                      // Verify PIN
+                                      if (!context.mounted) return;
+                                      await _showPinVerificationDialog(
+                                        context,
+                                        user,
+                                      );
+                                    }
+                                  },
+                                  onDelete: () async {
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: Text(
+                                          'Hapus ${user.name}?',
+                                        ), // Fallback l10n
+                                        content: const Text(
+                                          'Apakah anda yakin ingin menghapus akun ini? Data tidak dapat dikembalikan.',
+                                        ), // Fallback l10n
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, false),
+                                            child: Text(l10n.commonCancel),
+                                          ),
+                                          FilledButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, true),
+                                            style: FilledButton.styleFrom(
+                                              backgroundColor: Colors.red,
+                                            ),
+                                            child: const Text('Hapus'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+
+                                    if (confirm == true && context.mounted) {
+                                      context.read<AuthCubit>().deleteUser(
+                                        user.id!,
+                                      );
+                                    }
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        const SizedBox(height: 24),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: ElevatedButton.icon(
+                            onPressed: () => context.push('/register'),
+                            icon: const Icon(Icons.person_add),
+                            label: Text(l10n.usAddUser),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 16,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                         ),
-                      )
-                    else
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: users.length,
-                          itemBuilder: (context, index) {
-                            final user = users[index];
-                            return _UserCard(
-                              user: user,
-                              onTap: () async {
-                                // Check if user has PIN
-                                if (user.pin == null || user.pin!.isEmpty) {
-                                  // Force user to set PIN
-                                  if (!context.mounted) return;
-                                  await _showSetPinDialog(context, user);
-                                } else {
-                                  // Verify PIN
-                                  if (!context.mounted) return;
-                                  await _showPinVerificationDialog(
-                                    context,
-                                    user,
-                                  );
-                                }
-                              },
-                              onDelete: () async {
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: Text(
-                                      'Hapus ${user.name}?',
-                                    ), // Fallback l10n
-                                    content: const Text(
-                                      'Apakah anda yakin ingin menghapus akun ini? Data tidak dapat dikembalikan.',
-                                    ), // Fallback l10n
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(context, false),
-                                        child: Text(l10n.commonCancel),
-                                      ),
-                                      FilledButton(
-                                        onPressed: () =>
-                                            Navigator.pop(context, true),
-                                        style: FilledButton.styleFrom(
-                                          backgroundColor: Colors.red,
-                                        ),
-                                        child: const Text('Hapus'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-
-                                if (confirm == true && context.mounted) {
-                                  context.read<AuthCubit>().deleteUser(
-                                    user.id!,
-                                  );
-                                }
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: () => context.push('/register'),
-                      icon: const Icon(Icons.person_add),
-                      label: Text(l10n.usAddUser),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               );
             },

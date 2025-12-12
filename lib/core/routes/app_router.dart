@@ -25,10 +25,12 @@ import '../../features/network/screens/p2p_connection_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/profile/screens/edit_profile_screen.dart';
 import '../../features/ai_assistant/screens/ai_assistant_screen.dart';
+import '../../features/settings/screens/network_settings_screen.dart';
 
 import '../../features/auth/screens/registration_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/user_selection_screen.dart';
+import '../../features/profile/screens/change_pin_screen.dart';
 
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/splash/screens/splash_screen.dart';
@@ -36,8 +38,11 @@ import '../../features/splash/screens/splash_screen.dart';
 import '../auth/auth_cubit.dart';
 import '../auth/models/user_model.dart';
 
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 GoRouter createAppRouter(AuthCubit authCubit) {
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/splash',
     refreshListenable: GoRouterRefreshStream(authCubit.stream),
     redirect: (context, state) {
@@ -255,6 +260,14 @@ GoRouter createAppRouter(AuthCubit authCubit) {
           GoRoute(
             path: '/edit-profile',
             builder: (context, state) => const EditProfileScreen(),
+          ),
+          GoRoute(
+            path: '/settings/network',
+            builder: (context, state) => const NetworkSettingsScreen(),
+          ),
+          GoRoute(
+            path: '/settings/change-pin',
+            builder: (context, state) => const ChangePinScreen(),
           ),
           // AI ASSISTANT
           GoRoute(

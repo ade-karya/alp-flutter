@@ -9,10 +9,49 @@ import 'core/auth/auth_cubit.dart';
 import 'core/database/database_helper.dart';
 import 'package:alp/l10n/arb/app_localizations.dart';
 import 'core/network/network_discovery_service.dart';
+import 'dart:ui';
+import 'package:go_router/go_router.dart';
 import 'core/network/network_cubit.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Handle Flutter Errors (UI)
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    _handleGlobalError();
+  };
+
+  // Handle Async Errors (Futures, etc.)
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('Async Error caught: $error');
+    debugPrint(stack.toString());
+    _handleGlobalError();
+    return true; // handled
+  };
+
   runApp(const MyApp());
+}
+
+bool _isHandlingError = false;
+
+void _handleGlobalError() {
+  if (_isHandlingError) return;
+  _isHandlingError = true;
+
+  // Small delay to ensure frame is ready for navigation
+  Future.delayed(const Duration(milliseconds: 500), () {
+    _isHandlingError = false;
+    final context = rootNavigatorKey.currentContext;
+    if (context != null && context.mounted) {
+      try {
+        context.go('/user-selection');
+      } catch (e) {
+        // Fallback if route not found
+        context.go('/login');
+      }
+    }
+  });
 }
 
 class MyApp extends StatelessWidget {

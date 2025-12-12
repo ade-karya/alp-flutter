@@ -28,19 +28,41 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
   }
 
   Future<void> _loadClasses() async {
-    final user = (context.read<AuthCubit>().state as Authenticated).user;
-    if (user.id == null) return;
+    try {
+      final authState = context.read<AuthCubit>().state;
+      if (authState is! Authenticated) {
+        setState(() => _isLoading = false);
+        return;
+      }
+      final user = authState.user;
 
-    final classMaps = await DatabaseHelper.instance.getTeacherClasses(user.id!);
-    setState(() {
-      _classes = classMaps.map((m) => ClassModel.fromMap(m)).toList();
-      _isLoading = false;
-    });
+      if (user.id == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final classMaps = await DatabaseHelper.instance.getTeacherClasses(
+        user.id!,
+      );
+      if (mounted) {
+        setState(() {
+          _classes = classMaps.map((m) => ClassModel.fromMap(m)).toList();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading classes: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   Future<void> _createClass(String name, String description) async {
     final l10n = AppLocalizations.of(context)!;
-    final user = (context.read<AuthCubit>().state as Authenticated).user;
+    final authState = context.read<AuthCubit>().state;
+    if (authState is! Authenticated) return;
+    final user = authState.user;
 
     final rng = Random();
     String pin = '';
@@ -146,9 +168,20 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              if (nameController.text.isNotEmpty) {
-                _createClass(nameController.text, descController.text);
+              if (nameController.text.trim().isNotEmpty) {
                 Navigator.pop(context);
+                _createClass(
+                  nameController.text.trim(),
+                  descController.text.trim(),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Nama kelas wajib diisi'),
+                    backgroundColor: Colors.orange,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
               }
             },
             style: ElevatedButton.styleFrom(
@@ -261,155 +294,340 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
   }
 
   void _showQrDialog(ClassModel cls) {
-    final networkCubit = context.read<NetworkCubit>();
-    final serverIp = networkCubit.serverIp;
+    try {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return StatefulBuilder(
+            builder: (context, setState) {
+              try {
+                final networkCubit = context.watch<NetworkCubit>();
+                String? serverIp = networkCubit.serverIp;
+                final interfaces = networkCubit.availableInterfaces;
 
-    if (serverIp == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.wifi_off, color: Colors.white),
-              SizedBox(width: 8),
-              Text('P2P Server tidak aktif. Periksa koneksi WiFi.'),
-            ],
-          ),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
+                // 1. Deduplicate interfaces by IP to prevent Dropdown crash
+                final uniqueInterfaces = <String, Map<String, String>>{};
+                for (final i in interfaces) {
+                  final ip = i['ip'];
+                  if (ip != null && ip.isNotEmpty) {
+                    uniqueInterfaces[ip] = i;
+                  }
+                }
+                final validInterfaces = uniqueInterfaces.values.toList();
 
-    final qrData = jsonEncode({
-      'host': serverIp,
-      'port': 3000,
-      'pin': cls.pin,
-      'name': cls.name,
-    });
+                // 2. Ensure serverIp is valid and exists in the list
+                if (serverIp == null ||
+                    !uniqueInterfaces.containsKey(serverIp)) {
+                  if (validInterfaces.isNotEmpty) {
+                    serverIp = validInterfaces.first['ip'];
+                  } else {
+                    serverIp = null;
+                  }
+                }
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        contentPadding: EdgeInsets.zero,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blue[400]!, Colors.blue[700]!],
-                ),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(24),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.qr_code, color: Colors.white, size: 28),
-                  const SizedBox(width: 12),
-                  Expanded(
+                final qrData = jsonEncode({
+                  'host': serverIp ?? '',
+                  'port': 3000,
+                  'pin': cls.pin,
+                  'name': cls.name,
+                });
+
+                return AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // ... header ...
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.blue[400]!, Colors.blue[700]!],
+                          ),
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(24),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.qr_code,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    cls.name,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Scan untuk bergabung',
+                                    style: TextStyle(
+                                      color: Colors.white.withAlpha(200),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // QR Code Area
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            if (serverIp != null) ...[
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withAlpha(50),
+                                      spreadRadius: 2,
+                                      blurRadius: 10,
+                                    ),
+                                  ],
+                                ),
+                                child: SizedBox(
+                                  height: 200,
+                                  width: 200,
+                                  child: QrImageView(
+                                    data: qrData,
+                                    version: QrVersions.auto,
+                                    errorStateBuilder: (cxt, err) {
+                                      return Center(
+                                        child: Text(
+                                          'Error generating QR: $err',
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              // PIN Display
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.pin, color: Colors.blue),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'PIN: ',
+                                      style: TextStyle(color: Colors.grey[600]),
+                                    ),
+                                    Text(
+                                      cls.pin,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20,
+                                        letterSpacing: 4,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Interface Selector
+                              if (validInterfaces.length > 1)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.grey[300]!,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      isExpanded: false,
+                                      value: serverIp, // Ensure this is bound
+                                      items: validInterfaces.map((i) {
+                                        return DropdownMenuItem<String>(
+                                          value: i['ip'],
+                                          child: Text(
+                                            '${i['name']} (${i['ip']})',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        );
+                                      }).toList(),
+                                      onChanged: (val) {
+                                        if (val != null) {
+                                          networkCubit.selectInterface(val);
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                )
+                              else
+                                Text(
+                                  'IP: $serverIp',
+                                  style: TextStyle(
+                                    color: Colors.grey[500],
+                                    fontSize: 12,
+                                  ),
+                                ),
+                            ] else ...[
+                              if (!networkCubit.isServerRunning) ...[
+                                const Icon(
+                                  Icons.power_settings_new,
+                                  size: 64,
+                                  color: Colors.grey,
+                                ),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'Server Kelas Nonaktif',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Aktifkan server untuk menampilkan QR Code.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    final userState = context
+                                        .read<AuthCubit>()
+                                        .state;
+                                    if (userState is Authenticated) {
+                                      networkCubit.toggleServer(
+                                        true,
+                                        userState.user,
+                                      );
+                                    }
+                                  },
+                                  icon: const Icon(Icons.power_settings_new),
+                                  label: const Text('Aktifkan Server'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              ] else ...[
+                                const Icon(
+                                  Icons.wifi_off,
+                                  size: 64,
+                                  color: Colors.orange,
+                                ),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'Network Tidak Tersedia',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Pastikan WiFi aktif dan tekan tombol refresh.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                                const SizedBox(height: 16),
+                                OutlinedButton.icon(
+                                  onPressed: () {
+                                    final userState = context
+                                        .read<AuthCubit>()
+                                        .state;
+                                    if (userState is Authenticated) {
+                                      networkCubit.start(userState.user);
+                                    }
+                                  },
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Refresh Network'),
+                                ),
+                              ],
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    Center(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Tutup'),
+                      ),
+                    ),
+                  ],
+                );
+              } catch (e, stack) {
+                return AlertDialog(
+                  title: const Text('Error'),
+                  content: SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          cls.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
+                        const Text(
+                          'Terjadi kesalahan saat menampilkan QR Code:',
                         ),
+                        const SizedBox(height: 8),
                         Text(
-                          'Scan untuk bergabung',
-                          style: TextStyle(
-                            color: Colors.white.withAlpha(200),
-                            fontSize: 12,
-                          ),
+                          e.toString(),
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          stack.toString(),
+                          style: const TextStyle(fontSize: 10),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
-            // QR Code
-            Container(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withAlpha(50),
-                          spreadRadius: 2,
-                          blurRadius: 10,
-                        ),
-                      ],
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Tutup'),
                     ),
-                    child: QrImageView(
-                      data: qrData,
-                      version: QrVersions.auto,
-                      size: 200.0,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  // PIN Display
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.pin, color: Colors.blue),
-                        const SizedBox(width: 8),
-                        Text(
-                          'PIN: ',
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
-                        Text(
-                          cls.pin,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                            letterSpacing: 4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'IP: $serverIp',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          ],
+                  ],
+                );
+              }
+            },
+          );
+        },
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal membuka dialog: $e'),
+          backgroundColor: Colors.red,
         ),
-        actions: [
-          Center(
-            child: TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Tutup'),
-            ),
-          ),
-        ],
-      ),
-    );
+      );
+    }
   }
 
   @override
@@ -517,115 +735,125 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
             ],
           ),
           child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => context.go('/teacher/manage-classes/${cls.id}'),
-              borderRadius: BorderRadius.circular(20),
-              child: Column(
-                children: [
-                  // Header with gradient
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: colorPair),
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(20),
-                      ),
+            child: Column(
+              children: [
+                // Clickable Header & Body
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () =>
+                        context.go('/teacher/manage-classes/${cls.id}'),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(20),
                     ),
-                    child: Row(
+                    child: Column(
                       children: [
+                        // Header with gradient
                         Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(50),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.class_,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                cls.name,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                ),
-                              ),
-                              if (cls.description?.isNotEmpty ?? false)
-                                Text(
-                                  cls.description!,
-                                  style: TextStyle(
-                                    color: Colors.white.withAlpha(200),
-                                    fontSize: 13,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                            ],
-                          ),
-                        ),
-                        const Icon(Icons.chevron_right, color: Colors.white),
-                      ],
-                    ),
-                  ),
-                  // Footer with actions
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(8),
+                            gradient: LinearGradient(colors: colorPair),
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(20),
+                            ),
                           ),
                           child: Row(
                             children: [
-                              Icon(
-                                Icons.pin,
-                                size: 16,
-                                color: Colors.grey[600],
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'PIN: ${cls.pin}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey[700],
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withAlpha(50),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
+                                child: const Icon(
+                                  Icons.class_,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      cls.name,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                    if (cls.description?.isNotEmpty ?? false)
+                                      Text(
+                                        cls.description!,
+                                        style: TextStyle(
+                                          color: Colors.white.withAlpha(200),
+                                          fontSize: 13,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(
+                                Icons.chevron_right,
+                                color: Colors.white,
                               ),
                             ],
                           ),
                         ),
-                        const Spacer(),
-                        IconButton(
-                          icon: const Icon(Icons.qr_code),
-                          color: Colors.blue,
-                          tooltip: 'Show QR',
-                          onPressed: () => _showQrDialog(cls),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline),
-                          color: Colors.red,
-                          tooltip: 'Hapus Kelas',
-                          onPressed: () => _deleteClass(cls),
-                        ),
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+
+                // Footer with actions (Outside InkWell)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.pin, size: 16, color: Colors.grey[600]),
+                            const SizedBox(width: 4),
+                            Text(
+                              'PIN: ${cls.pin}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.qr_code),
+                        color: Colors.blue,
+                        tooltip: 'Show QR',
+                        onPressed: () => _showQrDialog(cls),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline),
+                        color: Colors.red,
+                        tooltip: 'Hapus Kelas',
+                        onPressed: () => _deleteClass(cls),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         );

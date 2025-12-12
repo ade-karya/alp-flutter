@@ -9,123 +9,6 @@ import '../settings/settings_cubit.dart';
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
-  void _showChangePinDialog(BuildContext context, AppLocalizations l10n) {
-    final currentPinController = TextEditingController();
-    final newPinController = TextEditingController();
-    final confirmPinController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    // Capture references before showing dialog to avoid deactivated context issues
-    final authCubit = context.read<AuthCubit>();
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.changePinTitle),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: currentPinController,
-                decoration: InputDecoration(
-                  labelText: l10n.changePinCurrentLabel,
-                  border: const OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                obscureText: true,
-                maxLength: 4,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return l10n.changePinErrorEmpty;
-                  }
-                  if (value.length != 4) {
-                    return l10n.errorPINLength;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: newPinController,
-                decoration: InputDecoration(
-                  labelText: l10n.changePinNewLabel,
-                  border: const OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                obscureText: true,
-                maxLength: 4,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return l10n.changePinErrorEmpty;
-                  }
-                  if (value.length != 4) {
-                    return l10n.errorPINLength;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: confirmPinController,
-                decoration: InputDecoration(
-                  labelText: l10n.changePinConfirmLabel,
-                  border: const OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                obscureText: true,
-                maxLength: 4,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return l10n.changePinErrorEmpty;
-                  }
-                  if (value != newPinController.text) {
-                    return l10n.errorMatchPIN;
-                  }
-                  return null;
-                },
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                final success = await authCubit.updatePin(
-                  currentPinController.text,
-                  newPinController.text,
-                );
-
-                if (dialogContext.mounted) {
-                  Navigator.pop(dialogContext);
-                }
-
-                scaffoldMessenger.showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      success
-                          ? l10n.changePinSuccess
-                          : l10n.changePinErrorCurrent,
-                    ),
-                    backgroundColor: success ? Colors.green : Colors.red,
-                  ),
-                );
-              }
-            },
-            child: Text(l10n.buttonOK),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthCubit, AuthState>(
@@ -146,40 +29,113 @@ class AppDrawer extends StatelessWidget {
             final l10n = AppLocalizations.of(context)!;
 
             return NavigationDrawer(
+              backgroundColor: Colors.white,
               children: [
-                // User Header
-                UserAccountsDrawerHeader(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [color.withValues(alpha: 0.8), color],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  currentAccountPicture: CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: Icon(
-                      user.role == UserRole.student
-                          ? Icons.school
-                          : Icons.person_outline,
-                      size: 32,
-                      color: color,
-                    ),
-                  ),
-                  accountName: Text(
-                    user.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  accountEmail: Text(
-                    '${user.role == UserRole.student ? l10n.roleStudent : l10n.roleTeacher} • ${user.role == UserRole.student ? l10n.labelNISN : l10n.labelNUPTK}: ${user.maskedIdentifier}',
-                    style: const TextStyle(fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                // Custom Header matching Dashboard
+                Container(
+                  padding: const EdgeInsets.fromLTRB(28, 50, 28, 20),
+                  color: Colors.white,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Sikolah Apps Logo
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red[700],
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(8),
+                                bottomLeft: Radius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Sikolah',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.green[700],
+                              borderRadius: const BorderRadius.only(
+                                topRight: Radius.circular(8),
+                                bottomRight: Radius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Apps',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      // User Info
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 20,
+                            backgroundColor: color.withAlpha(25),
+                            child: Icon(
+                              user.role == UserRole.student
+                                  ? Icons.school
+                                  : Icons.person_outline,
+                              size: 20,
+                              color: color,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  user.name,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${user.role == UserRole.student ? l10n.roleStudent : l10n.roleTeacher} • ${user.maskedIdentifier}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
+                const Divider(height: 1),
+                const SizedBox(height: 10),
                 // Dashboard
                 NavigationDrawerDestination(
                   icon: const Icon(Icons.dashboard),
@@ -194,16 +150,20 @@ class AppDrawer extends StatelessWidget {
                   icon: const Icon(Icons.pin),
                   label: Text(l10n.navChangePin),
                 ),
-                // Network Status
+                // Network Settings (Teacher only or both?)
+                // Requirement says "tambahkan halaman di pengaturan", implies general or teacher.
+                // Assuming mostly for Teacher since they control server, but Student might need to select Interface too?
+                // Student only needs to "connect", usually via QR. Teacher needs to "serve".
+                // But user requested "memilih ip yang digunakan qr" (Teacher feature).
+                // "menghidupkan atau mematikan server" (Teacher feature).
+                // So let's show it for everyone or maybe just Teacher?
+                // User didn't specify restricted, but "Manage Class" is teacher only.
+                // I'll show it for everyone for now as "Status Jaringan" was there for everyone.
                 const NavigationDrawerDestination(
-                  icon: Icon(Icons.wifi),
-                  label: Text('Status Jaringan'),
+                  icon: Icon(Icons.settings_ethernet),
+                  label: Text('Pengaturan Network'),
                 ),
-                // P2P Connection
-                const NavigationDrawerDestination(
-                  icon: Icon(Icons.sync_alt),
-                  label: Text('Koneksi P2P'),
-                ),
+
                 const Divider(),
                 // Language Switcher
                 Padding(
@@ -288,18 +248,15 @@ class AppDrawer extends StatelessWidget {
                     context.push('/edit-profile');
                     break;
                   case 2: // Change PIN
-                    _showChangePinDialog(context, l10n);
+                    context.push('/settings/change-pin');
                     break;
-                  case 3: // Network Status
-                    context.push('/network-status');
+                  case 3: // Network Settings
+                    context.push('/settings/network');
                     break;
-                  case 4: // P2P Connection
-                    context.push('/p2p-connection');
-                    break;
-                  case 5: // Switch User - logout first, router will redirect to user-selection
+                  case 4: // Switch User
                     context.read<AuthCubit>().logout();
                     break;
-                  case 6: // Logout
+                  case 5: // Logout
                     context.read<AuthCubit>().logout();
                     break;
                 }

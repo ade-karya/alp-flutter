@@ -39,8 +39,20 @@ class SyncServer {
             headers: {'Content-Type': 'application/json'},
           );
         }
+
+        // Fetch teacher info to attach to response
+        final teacher = await DatabaseHelper.instance.getUserById(
+          classData['teacher_id'] as int,
+        );
+
+        final responseData = Map<String, dynamic>.from(classData);
+        if (teacher != null) {
+          responseData['teacher_identifier'] = teacher.identifier;
+          responseData['teacher_name'] = teacher.name;
+        }
+
         return Response.ok(
-          jsonEncode(classData),
+          jsonEncode(responseData),
           headers: {'Content-Type': 'application/json'},
         );
       } catch (e) {
@@ -60,12 +72,14 @@ class SyncServer {
         final classId = data['class_id'] as int;
         final studentId = data['student_id'] as int;
         final studentName = data['student_name'] as String;
+        final studentIdentifier = data['student_identifier'] as String?;
 
         // Create or sync enrollment
         await DatabaseHelper.instance.syncEnrollment(
           classId: classId,
           studentId: studentId,
           studentName: studentName,
+          studentIdentifier: studentIdentifier,
         );
 
         return Response.ok(

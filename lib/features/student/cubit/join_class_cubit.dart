@@ -21,74 +21,75 @@ class JoinClassCubit extends Cubit<JoinClassState> {
       // 1. Check Local DB
       var cls = await DatabaseHelper.instance.getClassByPin(pin);
 
-      // 2. Check P2P Network (if not found locally)
-      if (cls == null) {
-        final teacherPeers = networkCubit.getTeacherPeers();
-        for (final peer in teacherPeers) {
-          final host = peer['host'];
-          if (host != null) {
-            final client = SyncClient(host: host, port: 3000); // Default port
+      // 2. Always try to Sync with P2P Network first (to get latest data)
+      // Even if we have it locally, we might need new assignments.
+      final teacherPeers = networkCubit.getTeacherPeers();
+      bool synced = false;
 
-            // Ping first
-            if (await client.ping()) {
-              final remoteCls = await client.getClassByPin(pin);
-              if (remoteCls != null) {
-                // Found on peer! Enroll
-                final enrolled = await client.enrollStudent(
-                  classId: remoteCls['id'] as int,
+      for (final peer in teacherPeers) {
+        final host = peer['host'];
+        if (host != null) {
+          final client = SyncClient(host: host, port: 3000); // Default port
+
+          // Ping first
+          if (await client.ping()) {
+            final remoteCls = await client.getClassByPin(pin);
+            if (remoteCls != null) {
+              // Found on peer! Enroll
+              final enrolled = await client.enrollStudent(
+                classId: remoteCls['id'] as int,
+                studentId: user.id!,
+                studentName: user.name,
+                studentIdentifier: user.identifier,
+              );
+
+              if (enrolled) {
+                // Save locally
+                await DatabaseHelper.instance.saveRemoteClassAndEnroll(
+                  remoteClass: remoteCls,
                   studentId: user.id!,
-                  studentName: user.name,
+                  teacherName: peer['name'] ?? 'Unknown Teacher',
                 );
 
-                if (enrolled) {
-                  // Save locally
-                  await DatabaseHelper.instance.saveRemoteClassAndEnroll(
-                    remoteClass: remoteCls,
-                    studentId: user.id!,
-                    teacherName: peer['name'] ?? 'Unknown Teacher',
-                  );
-
-                  // Sync assignments
-                  final assignments = await client.getAssignments(
-                    remoteCls['id'] as int,
-                  );
-                  if (assignments.isNotEmpty) {
-                    await DatabaseHelper.instance
-                        .saveRemoteAssignmentsWithQuestions(
-                          assignments: assignments,
-                          getQuestions: (id) =>
-                              client.getAssignmentQuestions(id),
-                        );
-                  }
-
-                  cls = remoteCls;
-                  break; // Stop searching
+                // Sync assignments
+                final assignments = await client.getAssignments(
+                  remoteCls['id'] as int,
+                );
+                if (assignments.isNotEmpty) {
+                  await DatabaseHelper.instance
+                      .saveRemoteAssignmentsWithQuestions(
+                        assignments: assignments,
+                        getQuestions: (id) => client.getAssignmentQuestions(id),
+                      );
                 }
+
+                cls = remoteCls;
+                synced = true;
+                break; // Stop searching if found and synced
               }
             }
           }
         }
       }
 
+      // 3. Final Verification
       if (cls == null) {
         emit(const JoinClassFailure('Class not found. Check PIN.'));
         return;
       }
 
-      // 3. Local Enrollment Check (if class found or existed locally)
+      // Ensure local enrollment record exists
       final isEnrolled = await DatabaseHelper.instance.isStudentEnrolled(
         user.id!,
         cls['id'],
       );
 
-      if (isEnrolled && cls['teacher_name'] != 'Teacher (QR)') {
-        // Allow re-join for QR updates if needed, but standard flow prevents duplicates
-        emit(const JoinClassFailure('You are already enrolled in this class.'));
-        return;
-      }
-
       if (!isEnrolled) {
         await DatabaseHelper.instance.joinClass(user.id!, cls['id']);
+      } else if (!synced && cls['teacher_name'] != 'Teacher (QR)') {
+        // Only warn if we didn't just sync and it looks like a manual re-entry without connection
+        // But generally, we want to allow "refreshing" via PIN without error
+        // So we can just silently succeed here, taking the user to the class
       }
 
       emit(JoinClassSuccess(classId: cls['id'], className: cls['name']));
@@ -128,6 +129,7 @@ class JoinClassCubit extends Cubit<JoinClassState> {
         classId: cls['id'] as int,
         studentId: user.id!,
         studentName: user.name,
+        studentIdentifier: user.identifier,
       );
 
       if (!enrolled) {
@@ -141,6 +143,10 @@ class JoinClassCubit extends Cubit<JoinClassState> {
         studentId: user.id!,
         teacherName: 'Teacher (QR)',
       );
+
+      // FORCE SYNC ASSIGNMENTS
+      // Previously this was inside an if block or potentially skipped
+      // Now we ensure we always try to fetch them upon join/scan
 
       final assignments = await client.getAssignments(cls['id'] as int);
       if (assignments.isNotEmpty) {
