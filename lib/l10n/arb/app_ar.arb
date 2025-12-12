@@ -1,0 +1,447 @@
+{
+    "@@locale": "ar",
+    "appTitle": "Sikolah Apps",
+    "@appTitle": {
+        "description": "عنوان التطبيق"
+    },
+    "welcomeMessage": "مرحبًا بكم في منصة التعليم المتكيف",
+    "@welcomeMessage": {
+        "description": "رسالة الترحيب على الشاشة الرئيسية"
+    },
+    "settingsLanguage": "اللغة",
+    "settingsLanguageEnglish": "الإنجليزية",
+    "settingsLanguageIndonesian": "الإندونيسية",
+    
+    "onboardingTitle1": "مرحبًا بكم في التعلم المتكيف",
+    "onboardingDesc1": "تجربة تعلم مخصصة مدعومة بالذكاء الاصطناعي.",
+    "onboardingTitle2": "تتبع تقدمك",
+    "onboardingDesc2": "راقب إنجازاتك ونموك بمرور الوقت.",
+    "onboardingTitle3": "تواصل مع المعلمين",
+    "onboardingDesc3": "احصل على التوجيه والدعم من معلميك.",
+    "onboardingGetStarted": "ابدأ الآن",
+    "onboardingJoinCommunity": "انضم إلى مجتمع المتعلمين والمعلمين لدينا.",
+    "loginTitle": "تسجيل الدخول",
+    "loginButton": "دخول",
+    "registerButton": "تسجيل",
+    "registerLink": "جديد هنا؟ إنشاء حساب",
+    "roleStudent": "طالب",
+    "roleTeacher": "معلم",
+    "labelNISN": "NISN (رقم الطالب)",
+    "labelNUPTK": "NUPTK (رقم المعلم)",
+    "labelPIN": "الرمز السري",
+    "labelIdentifier": "المعرف",
+    "errorEmptyNISN": "يرجى إدخال رقم الطالب",
+    "errorEmptyNUPTK": "يرجى إدخال رقم المعلم",
+    "errorEmptyPIN": "يرجى إدخال الرمز السري",
+    "errorShortPIN": "الرمز السري يجب أن يكون 4 أرقام على الأقل",
+    
+    "registerTitle": "تسجيل",
+    "labelName": "الاسم الكامل",
+    "labelDateOfBirth": "تاريخ الميلاد",
+    "errorEmptyName": "يرجى إدخال اسمك",
+    "errorEmptyDate": "يرجى إدخال تاريخ ميلادك",
+    "loginLink": "لديك حساب بالفعل؟ تسجيل الدخول",
+    
+    "registerSelectRole": "اختر دورك",
+    "registerStudentTitle": "تسجيل الطلاب",
+    "registerTeacherTitle": "تسجيل المعلمين",
+    "labelConfirmPIN": "تأكيد الرمز السري",
+    "helperPIN": "أنشئ رمزًا سريًا من 4 أرقام للأمان",
+    "errorConfirmPIN": "يرجى تأكيد الرمز السري",
+    "errorMatchPIN": "الرموز السرية غير متطابقة",
+    "labelSelectDate": "اختر التاريخ",
+    "errorNISNLength": "رقم الطالب يجب أن يكون 10 أرقام",
+    "errorNUPTKLength": "رقم المعلم يجب أن يكون 16 رقمًا",
+    "errorPINLength": "الرمز السري يجب أن يكون 4 أرقام بالضبط",
+    "buttonNext": "التالي",
+    "buttonBack": "السابق",
+    "registrationSuccessTitle": "تم التسجيل بنجاح",
+    "registrationSuccessContent": "تم تسجيل المستخدم {identifier} بنجاح. يرجى تسجيل الدخول.",
+    "@registrationSuccessContent": {
+        "placeholders": {
+            "identifier": {}
+        }
+    },
+    "buttonOK": "حسناً",
+
+    "dashboardStudent": "بوابة الطالب",
+    "dashboardTeacher": "بوابة المعلم",
+    "navDashboard": "لوحة التحكم",
+    "navSettings": "إعدادات الملف الشخصي",
+    "navEditProfile": "تعديل الملف الشخصي",
+    "navSwitchUser": "تبديل المستخدم",
+    "navChangePin": "تغيير الرمز السري",
+    "changePinTitle": "تغيير الرمز السري",
+    "changePinCurrentLabel": "الرمز السري الحالي",
+    "changePinNewLabel": "الرمز السري الجديد",
+    "changePinConfirmLabel": "تأكيد الرمز السري الجديد",
+    "changePinSuccess": "تم تغيير الرمز السري بنجاح!",
+    "changePinErrorCurrent": "الرمز السري الحالي غير صحيح",
+    "changePinErrorEmpty": "يرجى ملء جميع الحقول",
+    "navLogout": "تسجيل الخروج",
+    "navLanguage": "اللغة",
+    
+    "tileAITutor": "المعلم الذكي",
+    "tileMyCourses": "دوراتي",
+    "tileProgress": "التقدم",
+    "tileAIAssistant": "مساعد الذكاء الاصطناعي",
+    "tileCreateContent": "إنشاء محتوى",
+    "tileAnalytics": "تحليلات الطلاب",
+    "tileManageClass": "إدارة الفصل",
+    
+    "aiAssistantTitle": "إعدادات مساعد الذكاء الاصطناعي",
+    "activeProvider": "المزود النشط",
+    "allProviders": "جميع المزودين",
+    "noApiKey": "مفتاح API غير مكوّن",
+    "active": "نشط",
+    "labelBaseUrl": "الرابط الأساسي",
+    "labelApiKey": "مفتاح API",
+    "resetUrl": "إعادة تعيين الرابط",
+    "saveAndActivate": "حفظ وتفعيل",
+    "providerSaved": "تم حفظ الإعدادات وتفعيل المزود",
+    "labelModel": "نموذج",
+    "fetchModels": "جلب النماذج",
+    
+    "themePlayful": "تبديل إلى جاد",
+    "themeSerious": "تبديل إلى مرح",
+    
+    "featureComingSoon": "الميزة قادمة قريباً!",
+    
+    "ccTitle": "إنشاء محتوى",
+    "ccSnackBarError": "يرجى إدخال الموضوع والصف الدراسي",
+    "ccErrorApiKey": "مفتاح API غير موجود. يرجى التحقق من إعدادات الملف الشخصي.",
+    "ccTopicLabel": "الموضوع",
+    "ccTopicHint": "مثال: البناء الضوئي",
+    "ccGradeLabel": "الصف الدراسي",
+    "ccGradeHint": "مثال: الصف الخامس",
+    "ccGenerateButton": "إنشاء خطة الدرس",
+    "ccContentPlaceholder": "المحتوى المُنشأ سيظهر هنا...",
+    "ccErrorGenerating": "خطأ في إنشاء المحتوى: {error}",
+    "@ccErrorGenerating": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    
+    "mcTitle": "إدارة الفصول",
+    "mcSnackBarCreated": "تم إنشاء الفصل \"{name}\"! الرمز السري: {pin}",
+    "@mcSnackBarCreated": {
+        "placeholders": {
+            "name": {},
+            "pin": {}
+        }
+    },
+    "mcErrorCreating": "خطأ في إنشاء الفصل: {error}",
+    "@mcErrorCreating": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    "mcDialogTitle": "إنشاء فصل جديد",
+    "mcClassNameLabel": "اسم الفصل",
+    "mcClassDescLabel": "الوصف (اختياري)",
+    "mcEnrolledStudents": "الطلاب المسجلين:",
+    "mcNoStudents": "لا يوجد طلاب بعد.",
+    "mcFabCreate": "إنشاء فصل",
+    "mcNoClasses": "لم يتم إنشاء فصول بعد.",
+    
+    "commonCancel": "إلغاء",
+    "commonCreate": "إنشاء",
+    "commonSave": "حفظ",
+    "commonClose": "إغلاق",
+    
+    "usTitle": "اختر المستخدم",
+    "usEnterPin": "أدخل الرمز السري لـ {name}",
+    "@usEnterPin": {
+        "placeholders": {
+            "name": {}
+        }
+    },
+    "usLabelPin": "الرمز السري",
+    "usVerify": "تحقق",
+    "usIncorrectPin": "الرمز السري غير صحيح",
+    "usSetPinTitle": "عيّن الرمز السري",
+    "usSetPinMsg": "يرجى تعيين رمز سري من 4 أرقام للأمان",
+    "usConfirmPin": "تأكيد الرمز السري",
+    "usPinMismatch": "الرموز السرية غير متطابقة",
+    "usPinLength": "الرمز السري يجب أن يكون 4 أرقام",
+    "usSetPinButton": "حفظ الرمز السري",
+    "usNoUsers": "لم يتم تسجيل مستخدمين بعد",
+    "usAddUser": "إضافة مستخدم جديد",
+    
+    "profileTitle": "الملف الشخصي والإعدادات",
+    "profileGeminiConfig": "إعدادات Gemini API",
+    "profileApiKey": "مفتاح API",
+    "profileApiKeySaved": "تم حفظ مفتاح API",
+    "profileSelectModel": "اختر النموذج",
+    "profileRefreshModels": "تحديث النماذج",
+    "profileNoModels": "لم يتم العثور على نماذج. تحقق من مفتاح API.",
+    "profileSaveModel": "حفظ النموذج",
+    "profileModelSaved": "تم حفظ النموذج بنجاح!",
+    
+    "aiTutorTitle": "المعلم الذكي",
+    "aiTutorSystemPrompt": "أنت معلم ذكاء اصطناعي مفيد واسع المعرفة للطلاب. اشرح المفاهيم بوضوح وصبر باللغة التي يسأل بها الطالب.",
+    "aiTutorErrorApiKey": "مفتاح API غير موجود. يرجى التحقق من إعدادات الملف الشخصي.",
+    "aiTutorHint": "اسأل معلمك...",
+    "aiTutorError": "خطأ: {error}",
+    "@aiTutorError": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    
+    "mcCoursesTitle": "دوراتي",
+    "mcJoinClass": "الانضمام لفصل",
+    "mcClassNotFound": "لم يتم العثور على فصل بهذا الرمز",
+    "mcAlreadyEnrolled": "أنت مسجل بالفعل في هذا الفصل",
+    "mcJoinedSuccess": "تم الانضمام للفصل \"{name}\"!",
+    "@mcJoinedSuccess": {
+        "placeholders": {
+            "name": {}
+        }
+    },
+    "mcErrorJoining": "خطأ في الانضمام للفصل: {error}",
+    "@mcErrorJoining": {
+         "placeholders": {
+            "error": {}
+        }
+    },
+    "mcJoinDialogTitle": "الانضمام لفصل",
+    "mcEnterPinLabel": "أدخل رمز الفصل",
+    "mcCommonJoin": "انضمام",
+    "mcNoCourses": "لم تنضم لأي فصول بعد.",
+    "mcTeacherPrefix": "المعلم: {name}",
+    "@mcTeacherPrefix": {
+         "placeholders": {
+            "name": {}
+        }
+    },
+    
+    "languageSelectorTooltip": "اختر اللغة",
+    
+    "ccContentTypeLabel": "نوع المحتوى",
+    "ccTypeLessonPlan": "خطة الدرس",
+    "ccTypeMultipleChoice": "اختيار من متعدد",
+    "ccTypeEssay": "مقالي",
+    "ccQuestionCountLabel": "عدد الأسئلة",
+    "ccQuestionCountHint": "مثال: 5",
+    "ccGenerateMC": "إنشاء الأسئلة",
+    "ccGenerateEssay": "إنشاء أسئلة مقالية",
+    "ccSaveToBank": "حفظ في بنك الأسئلة",
+    "ccEditQuestion": "تعديل السؤال",
+    "ccQuestionLabel": "السؤال",
+    "ccOptionA": "الخيار أ",
+    "ccOptionB": "الخيار ب",
+    "ccOptionC": "الخيار ج",
+    "ccOptionD": "الخيار د",
+    "ccCorrectAnswer": "الإجابة الصحيحة",
+    "ccRubric": "نموذج التقييم",
+    "ccFeedback": "التغذية الراجعة",
+    "ccSaved": "تم حفظ الأسئلة!",
+    "ccNoQuestions": "لم يتم إنشاء أسئلة بعد.",
+    "ccParseError": "فشل في تحليل استجابة الذكاء الاصطناعي. حاول مرة أخرى.",
+    
+    "qbTitle": "بنك الأسئلة",
+    "errorConfirmPIN": "يرجى تأكيد الرمز السري",
+    "errorMatchPIN": "الرموز السرية غير متطابقة",
+    "labelSelectDate": "اختر التاريخ",
+    "errorNISNLength": "رقم الطالب يجب أن يكون 10 أرقام",
+    "errorNUPTKLength": "رقم المعلم يجب أن يكون 16 رقمًا",
+    "errorPINLength": "الرمز السري يجب أن يكون 4 أرقام بالضبط",
+    "buttonNext": "التالي",
+    "buttonBack": "السابق",
+    "registrationSuccessTitle": "تم التسجيل بنجاح",
+    "registrationSuccessContent": "تم تسجيل المستخدم {identifier} بنجاح. يرجى تسجيل الدخول.",
+    "@registrationSuccessContent": {
+        "placeholders": {
+            "identifier": {}
+        }
+    },
+    "buttonOK": "حسناً",
+
+    "dashboardStudent": "بوابة الطالب",
+    "dashboardTeacher": "بوابة المعلم",
+    "navDashboard": "لوحة التحكم",
+    "navSettings": "إعدادات الملف الشخصي",
+    "navEditProfile": "تعديل الملف الشخصي",
+    "navSwitchUser": "تبديل المستخدم",
+    "navChangePin": "تغيير الرمز السري",
+    "changePinTitle": "تغيير الرمز السري",
+    "changePinCurrentLabel": "الرمز السري الحالي",
+    "changePinNewLabel": "الرمز السري الجديد",
+    "changePinConfirmLabel": "تأكيد الرمز السري الجديد",
+    "changePinSuccess": "تم تغيير الرمز السري بنجاح!",
+    "changePinErrorCurrent": "الرمز السري الحالي غير صحيح",
+    "changePinErrorEmpty": "يرجى ملء جميع الحقول",
+    "navLogout": "تسجيل الخروج",
+    "navLanguage": "اللغة",
+    
+    "tileAITutor": "المعلم الذكي",
+    "tileMyCourses": "دوراتي",
+    "tileProgress": "التقدم",
+    "tileAIAssistant": "مساعد الذكاء الاصطناعي",
+    "tileCreateContent": "إنشاء محتوى",
+    "tileAnalytics": "تحليلات الطلاب",
+    "tileManageClass": "إدارة الفصل",
+    
+    "aiAssistantTitle": "إعدادات مساعد الذكاء الاصطناعي",
+    "activeProvider": "المزود النشط",
+    "allProviders": "جميع المزودين",
+    "noApiKey": "مفتاح API غير مكوّن",
+    "active": "نشط",
+    "labelBaseUrl": "الرابط الأساسي",
+    "labelApiKey": "مفتاح API",
+    "resetUrl": "إعادة تعيين الرابط",
+    "saveAndActivate": "حفظ وتفعيل",
+    "providerSaved": "تم حفظ الإعدادات وتفعيل المزود",
+    "labelModel": "نموذج",
+    "fetchModels": "جلب النماذج",
+    
+    "themePlayful": "تبديل إلى جاد",
+    "themeSerious": "تبديل إلى مرح",
+    
+    "featureComingSoon": "الميزة قادمة قريباً!",
+    
+    "ccTitle": "إنشاء محتوى",
+    "ccSnackBarError": "يرجى إدخال الموضوع والصف الدراسي",
+    "ccErrorApiKey": "مفتاح API غير موجود. يرجى التحقق من إعدادات الملف الشخصي.",
+    "ccTopicLabel": "الموضوع",
+    "ccTopicHint": "مثال: البناء الضوئي",
+    "ccGradeLabel": "الصف الدراسي",
+    "ccGradeHint": "مثال: الصف الخامس",
+    "ccGenerateButton": "إنشاء خطة الدرس",
+    "ccContentPlaceholder": "المحتوى المُنشأ سيظهر هنا...",
+    "ccErrorGenerating": "خطأ في إنشاء المحتوى: {error}",
+    "@ccErrorGenerating": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    
+    "mcTitle": "إدارة الفصول",
+    "mcSnackBarCreated": "تم إنشاء الفصل \"{name}\"! الرمز السري: {pin}",
+    "@mcSnackBarCreated": {
+        "placeholders": {
+            "name": {},
+            "pin": {}
+        }
+    },
+    "mcErrorCreating": "خطأ في إنشاء الفصل: {error}",
+    "@mcErrorCreating": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    "mcDialogTitle": "إنشاء فصل جديد",
+    "mcClassNameLabel": "اسم الفصل",
+    "mcClassDescLabel": "الوصف (اختياري)",
+    "mcEnrolledStudents": "الطلاب المسجلين:",
+    "mcNoStudents": "لا يوجد طلاب بعد.",
+    "mcFabCreate": "إنشاء فصل",
+    "mcNoClasses": "لم يتم إنشاء فصول بعد.",
+    
+    "commonCancel": "إلغاء",
+    "commonCreate": "إنشاء",
+    "commonSave": "حفظ",
+    "commonClose": "إغلاق",
+    
+    "usTitle": "اختر المستخدم",
+    "usEnterPin": "أدخل الرمز السري لـ {name}",
+    "@usEnterPin": {
+        "placeholders": {
+            "name": {}
+        }
+    },
+    "usLabelPin": "الرمز السري",
+    "usVerify": "تحقق",
+    "usIncorrectPin": "الرمز السري غير صحيح",
+    "usSetPinTitle": "عيّن الرمز السري",
+    "usSetPinMsg": "يرجى تعيين رمز سري من 4 أرقام للأمان",
+    "usConfirmPin": "تأكيد الرمز السري",
+    "usPinMismatch": "الرموز السرية غير متطابقة",
+    "usPinLength": "الرمز السري يجب أن يكون 4 أرقام",
+    "usSetPinButton": "حفظ الرمز السري",
+    "usNoUsers": "لم يتم تسجيل مستخدمين بعد",
+    "usAddUser": "إضافة مستخدم جديد",
+    
+    "profileTitle": "الملف الشخصي والإعدادات",
+    "profileGeminiConfig": "إعدادات Gemini API",
+    "profileApiKey": "مفتاح API",
+    "profileApiKeySaved": "تم حفظ مفتاح API",
+    "profileSelectModel": "اختر النموذج",
+    "profileRefreshModels": "تحديث النماذج",
+    "profileNoModels": "لم يتم العثور على نماذج. تحقق من مفتاح API.",
+    "profileSaveModel": "حفظ النموذج",
+    "profileModelSaved": "تم حفظ النموذج بنجاح!",
+    
+    "aiTutorTitle": "المعلم الذكي",
+    "aiTutorSystemPrompt": "أنت معلم ذكاء اصطناعي مفيد واسع المعرفة للطلاب. اشرح المفاهيم بوضوح وصبر باللغة التي يسأل بها الطالب.",
+    "aiTutorErrorApiKey": "مفتاح API غير موجود. يرجى التحقق من إعدادات الملف الشخصي.",
+    "aiTutorHint": "اسأل معلمك...",
+    "aiTutorError": "خطأ: {error}",
+    "@aiTutorError": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    
+    "mcCoursesTitle": "دوراتي",
+    "mcJoinClass": "الانضمام لفصل",
+    "mcClassNotFound": "لم يتم العثور على فصل بهذا الرمز",
+    "mcAlreadyEnrolled": "أنت مسجل بالفعل في هذا الفصل",
+    "mcJoinedSuccess": "تم الانضمام للفصل \"{name}\"!",
+    "@mcJoinedSuccess": {
+        "placeholders": {
+            "name": {}
+        }
+    },
+    "mcErrorJoining": "خطأ في الانضمام للفصل: {error}",
+    "@mcErrorJoining": {
+         "placeholders": {
+            "error": {}
+        }
+    },
+    "mcJoinDialogTitle": "الانضمام لفصل",
+    "mcEnterPinLabel": "أدخل رمز الفصل",
+    "mcCommonJoin": "انضمام",
+    "mcNoCourses": "لم تنضم لأي فصول بعد.",
+    "mcTeacherPrefix": "المعلم: {name}",
+    "@mcTeacherPrefix": {
+         "placeholders": {
+            "name": {}
+        }
+    },
+    
+    "languageSelectorTooltip": "اختر اللغة",
+    
+    "ccContentTypeLabel": "نوع المحتوى",
+    "ccTypeLessonPlan": "خطة الدرس",
+    "ccTypeMultipleChoice": "اختيار من متعدد",
+    "ccTypeEssay": "مقالي",
+    "ccQuestionCountLabel": "عدد الأسئلة",
+    "ccQuestionCountHint": "مثال: 5",
+    "ccGenerateMC": "إنشاء الأسئلة",
+    "ccGenerateEssay": "إنشاء أسئلة مقالية",
+    "ccSaveToBank": "حفظ في بنك الأسئلة",
+    "ccEditQuestion": "تعديل السؤال",
+    "ccQuestionLabel": "السؤال",
+    "ccOptionA": "الخيار أ",
+    "ccOptionB": "الخيار ب",
+    "ccOptionC": "الخيار ج",
+    "ccOptionD": "الخيار د",
+    "ccCorrectAnswer": "الإجابة الصحيحة",
+    "ccRubric": "نموذج التقييم",
+    "ccFeedback": "التغذية الراجعة",
+    "ccSaved": "تم حفظ الأسئلة!",
+    "ccNoQuestions": "لم يتم إنشاء أسئلة بعد.",
+    "ccParseError": "فشل في تحليل استجابة الذكاء الاصطناعي. حاول مرة أخرى.",
+    
+    "qbTitle": "بنك الأسئلة",
+    "qbEmpty": "لا توجد أسئلة في البنك بعد.",
+    "qbDeleteConfirm": "حذف هذا السؤال؟",
+    "qbDeleted": "تم حذف السؤال",
+    "qbRecentQuestions": "أحدث الأسئلة",
+    "ccQuestionLabel": "أسئلة",
+    "ccErrorTimeout": "يستغرق الذكاء الاصطناعي وقتًا طويلاً للاستجابة. حاول تقليل عدد الأسئلة.",
+    "mcJoiningClass": "جاري الانضمام إلى الفصل..."
+}

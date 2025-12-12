@@ -1,0 +1,8 @@
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  windows:
+    image_path: "assets/icon/app_icon.png"
+    icon_size: 256
+  min_sdk_android: 21

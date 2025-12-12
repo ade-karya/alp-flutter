@@ -1,0 +1,18 @@
+  ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+     FLUTTER LAUNCHER ICONS (v0.14.4)                               
+  ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  
+Unhandled exception:
+
+Γ£ù ERROR: InvalidConfigException 
+line 4, column 12: Unsupported value for "windows". type 'bool' is not a subtype of type 'Map<dynamic, dynamic>' in type cast
+  Γò╖
+4 Γöé   windows: true
+
+  Γöé            ^^^^
+  Γò╡
+#0      Config._getConfigFromPubspecYaml (package:flutter_launcher_icons/config/config.dart:100:7)
+#1      Config.loadConfigFromPath (package:flutter_launcher_icons/config/config.dart:56:12)
+#2      loadConfigFileFromArgResults (package:flutter_launcher_icons/main.dart:190:46)
+#3      createIconsFromArguments (package:flutter_launcher_icons/main.dart:82:9)
+<asynchronous suspension>

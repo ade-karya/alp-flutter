@@ -1,0 +1,447 @@
+{
+    "@@locale": "id",
+    "appTitle": "Sikolah Apps",
+    "@appTitle": {
+        "description": "Judul aplikasi"
+    },
+    "welcomeMessage": "Selamat datang di Platform Pembelajaran Adaptif",
+    "@welcomeMessage": {
+        "description": "Pesan selamat datang di layar beranda"
+    },
+    "settingsLanguage": "Bahasa",
+    "settingsLanguageEnglish": "Inggris",
+    "settingsLanguageIndonesian": "Indonesia",
+
+    "onboardingTitle1": "Selamat Datang di Pembelajaran Adaptif",
+    "onboardingDesc1": "Pengalaman belajar yang dipersonalisasi didukung oleh AI.",
+    "onboardingTitle2": "Pantau Kemajuan Anda",
+    "onboardingDesc2": "Pantau pencapaian dan pertumbuhan Anda dari waktu ke waktu.",
+    "onboardingTitle3": "Terhubung dengan Guru",
+    "onboardingDesc3": "Dapatkan bimbingan dan dukungan dari pendidik Anda.",
+    "onboardingGetStarted": "Mulai Sekarang",
+    "onboardingJoinCommunity": "Bergabunglah dengan komunitas pembelajar dan pendidik kami.",
+    "loginTitle": "Masuk",
+    "loginButton": "Masuk",
+    "registerButton": "Daftar",
+    "registerLink": "Belum punya akun? Buat akun baru",
+    "roleStudent": "Siswa",
+    "roleTeacher": "Guru",
+    "labelNISN": "NISN",
+    "labelNUPTK": "NUPTK",
+    "labelPIN": "PIN",
+    "labelIdentifier": "Pengenal",
+    "errorEmptyNISN": "Mohon masukkan NISN Anda",
+    "errorEmptyNUPTK": "Mohon masukkan NUPTK Anda",
+    "errorEmptyPIN": "Mohon masukkan PIN Anda",
+    "errorShortPIN": "PIN harus minimal 4 digit",
+
+    "registerTitle": "Daftar",
+    "labelName": "Nama Lengkap",
+    "labelDateOfBirth": "Tanggal Lahir",
+    "errorEmptyName": "Mohon masukkan nama Anda",
+    "errorEmptyDate": "Mohon masukkan tanggal lahir Anda",
+    "loginLink": "Sudah punya akun? Masuk",
+
+    "registerSelectRole": "Pilih Peran Anda",
+    "registerStudentTitle": "Pendaftaran Siswa",
+    "registerTeacherTitle": "Pendaftaran Guru",
+    "labelConfirmPIN": "Konfirmasi PIN",
+    "helperPIN": "Buat 4 digit PIN untuk keamanan",
+    "errorConfirmPIN": "Mohon konfirmasi PIN Anda",
+    "errorMatchPIN": "PIN tidak cocok",
+    "labelSelectDate": "Pilih tanggal",
+    "errorNISNLength": "NISN harus 10 digit",
+    "errorNUPTKLength": "NUPTK harus 16 digit",
+    "errorPINLength": "PIN harus tepat 4 digit",
+    "buttonNext": "Lanjut",
+    "buttonBack": "Kembali",
+    "registrationSuccessTitle": "Pendaftaran Berhasil",
+    "registrationSuccessContent": "Pengguna {identifier} berhasil terdaftar. Silakan masuk.",
+    "@registrationSuccessContent": {
+        "placeholders": {
+            "identifier": {}
+        }
+    },
+    "buttonOK": "OK",
+
+    "dashboardStudent": "Portal Siswa",
+    "dashboardTeacher": "Portal Guru",
+    "navDashboard": "Dasbor",
+    "navSettings": "Pengaturan Profil",
+    "navEditProfile": "Edit Profil",
+    "navSwitchUser": "Ganti Pengguna",
+    "navChangePin": "Ubah PIN",
+    "changePinTitle": "Ubah PIN",
+    "changePinCurrentLabel": "PIN Saat Ini",
+    "changePinNewLabel": "PIN Baru",
+    "changePinConfirmLabel": "Konfirmasi PIN Baru",
+    "changePinSuccess": "PIN berhasil diubah!",
+    "changePinErrorCurrent": "PIN saat ini salah",
+    "changePinErrorEmpty": "Mohon isi semua kolom",
+    "navLogout": "Keluar",
+    "navLanguage": "Bahasa",
+    
+    "tileAITutor": "Tutor AI",
+    "tileMyCourses": "Kursus Saya",
+    "tileProgress": "Kemajuan",
+    "tileAIAssistant": "Asisten AI",
+    "tileCreateContent": "Buat Konten",
+    "tileAnalytics": "Analitik Siswa",
+    "tileManageClass": "Kelola Kelas",
+    
+    "aiAssistantTitle": "Pengaturan Asisten AI",
+    "activeProvider": "Provider Aktif",
+    "allProviders": "Semua Provider",
+    "noApiKey": "API Key belum dikonfigurasi",
+    "active": "Aktif",
+    "labelBaseUrl": "URL Dasar",
+    "labelApiKey": "API Key",
+    "resetUrl": "Reset URL",
+    "saveAndActivate": "Simpan & Aktifkan",
+    "providerSaved": "Pengaturan provider disimpan dan diaktifkan",
+    "labelModel": "Model",
+    "fetchModels": "Ambil Model",
+    
+    "themePlayful": "Ubah ke Serius",
+    "themeSerious": "Ubah ke Ceria",
+    
+    "featureComingSoon": "Fitur segera hadir!",
+    
+    "ccTitle": "Buat Konten",
+    "ccSnackBarError": "Mohon masukkan topik dan tingkat kelas",
+    "ccErrorApiKey": "API Key tidak ditemukan. Cek pengaturan Profil.",
+    "ccTopicLabel": "Topik",
+    "ccTopicHint": "cth., Fotosintesis",
+    "ccGradeLabel": "Tingkat Kelas",
+    "ccGradeHint": "cth., Kelas 5 SD",
+    "ccGenerateButton": "Buat Rencana Pembelajaran",
+    "ccContentPlaceholder": "Konten yang dibuat akan muncul di sini...",
+    "ccErrorGenerating": "Gagal membuat konten: {error}",
+    "@ccErrorGenerating": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    
+    "mcTitle": "Kelola Kelas",
+    "mcSnackBarCreated": "Kelas \"{name}\" dibuat! PIN: {pin}",
+    "@mcSnackBarCreated": {
+        "placeholders": {
+            "name": {},
+            "pin": {}
+        }
+    },
+    "mcErrorCreating": "Gagal membuat kelas: {error}",
+    "@mcErrorCreating": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    "mcDialogTitle": "Buat Kelas Baru",
+    "mcClassNameLabel": "Nama Kelas",
+    "mcClassDescLabel": "Deskripsi (Opsional)",
+    "mcEnrolledStudents": "Siswa Terdaftar:",
+    "mcNoStudents": "Belum ada siswa.",
+    "mcFabCreate": "Buat Kelas",
+    "mcNoClasses": "Belum ada kelas yang dibuat.",
+    
+    "commonCancel": "Batal",
+    "commonCreate": "Buat",
+    "commonSave": "Simpan",
+    "commonClose": "Tutup",
+    
+    "usTitle": "Pilih Pengguna",
+    "usEnterPin": "Masukkan PIN untuk {name}",
+    "@usEnterPin": {
+        "placeholders": {
+            "name": {}
+        }
+    },
+    "usLabelPin": "PIN",
+    "usVerify": "Verifikasi",
+    "usIncorrectPin": "PIN Salah",
+    "usSetPinTitle": "Atur PIN Anda",
+    "usSetPinMsg": "Buat PIN 4 digit untuk keamanan",
+    "usConfirmPin": "Konfirmasi PIN",
+    "usPinMismatch": "PIN tidak cocok",
+    "usPinLength": "PIN harus 4 digit",
+    "usSetPinButton": "Simpan PIN",
+    "usNoUsers": "Belum ada pengguna terdaftar",
+    "usAddUser": "Tambah Pengguna Baru",
+    
+    "profileTitle": "Profil & Pengaturan",
+    "profileGeminiConfig": "Konfigurasi Gemini API",
+    "profileApiKey": "API Key",
+    "profileApiKeySaved": "API Key Disimpan",
+    "profileSelectModel": "Pilih Model",
+    "profileRefreshModels": "Segarkan Model",
+    "profileNoModels": "Model tidak ditemukan. Cek API Key Anda.",
+    "profileSaveModel": "Simpan Model",
+    "profileModelSaved": "Model berhasil disimpan!",
+    
+    "aiTutorTitle": "Tutor AI",
+    "aiTutorSystemPrompt": "Anda adalah tutor AI yang membantu dan berpengetahuan luas untuk siswa. Jelaskan konsep dengan jelas dan sabar dalam bahasa yang diminta siswa.",
+    "aiTutorErrorApiKey": "API Key tidak ditemukan. Cek pengaturan Profil Anda.",
+    "aiTutorHint": "Tanya tutor Anda...",
+    "aiTutorError": "Error: {error}",
+    "@aiTutorError": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    
+    "mcCoursesTitle": "Kursus Saya",
+    "mcJoinClass": "Gabung Kelas",
+    "mcClassNotFound": "Kelas tidak ditemukan dengan PIN tersebut",
+    "mcAlreadyEnrolled": "Anda sudah terdaftar di kelas ini",
+    "mcJoinedSuccess": "Berhasil bergabung ke kelas \"{name}\"!",
+    "@mcJoinedSuccess": {
+        "placeholders": {
+            "name": {}
+        }
+    },
+    "mcErrorJoining": "Gagal bergabung kelas: {error}",
+    "@mcErrorJoining": {
+         "placeholders": {
+            "error": {}
+        }
+    },
+    "mcJoinDialogTitle": "Gabung Kelas",
+    "mcEnterPinLabel": "Masukkan PIN Kelas",
+    "mcCommonJoin": "Gabung",
+    "mcNoCourses": "Anda belum bergabung dengan kelas apapun.",
+    "mcTeacherPrefix": "Guru: {name}",
+    "@mcTeacherPrefix": {
+         "placeholders": {
+            "name": {}
+        }
+    },
+    
+    "languageSelectorTooltip": "Pilih Bahasa",
+    
+    "ccContentTypeLabel": "Jenis Konten",
+    "ccTypeLessonPlan": "Rencana Pelajaran",
+    "ccTypeMultipleChoice": "Pilihan Ganda",
+    "ccTypeEssay": "Essay",
+    "ccQuestionCountLabel": "Jumlah Soal",
+    "ccQuestionCountHint": "mis., 5",
+    "ccGenerateMC": "Buat Soal",
+    "ccGenerateEssay": "Buat Soal Essay",
+    "ccSaveToBank": "Simpan ke Bank Soal",
+    "ccEditQuestion": "Edit Soal",
+    "ccQuestionLabel": "Soal",
+    "ccOptionA": "Pilihan A",
+    "ccOptionB": "Pilihan B",
+    "ccOptionC": "Pilihan C",
+    "ccOptionD": "Pilihan D",
+    "ccCorrectAnswer": "Jawaban Benar",
+    "ccRubric": "Rubrik Penilaian",
+    "ccFeedback": "Umpan Balik",
+    "ccSaved": "Soal berhasil disimpan!",
+    "ccNoQuestions": "Belum ada soal yang dibuat.",
+    "ccParseError": "Gagal memproses respons AI. Silakan coba lagi.",
+    
+    "qbTitle": "Bank Soal",
+    "errorConfirmPIN": "Mohon konfirmasi PIN Anda",
+    "errorMatchPIN": "PIN tidak cocok",
+    "labelSelectDate": "Pilih tanggal",
+    "errorNISNLength": "NISN harus 10 digit",
+    "errorNUPTKLength": "NUPTK harus 16 digit",
+    "errorPINLength": "PIN harus tepat 4 digit",
+    "buttonNext": "Lanjut",
+    "buttonBack": "Kembali",
+    "registrationSuccessTitle": "Pendaftaran Berhasil",
+    "registrationSuccessContent": "Pengguna {identifier} berhasil terdaftar. Silakan masuk.",
+    "@registrationSuccessContent": {
+        "placeholders": {
+            "identifier": {}
+        }
+    },
+    "buttonOK": "OK",
+
+    "dashboardStudent": "Portal Siswa",
+    "dashboardTeacher": "Portal Guru",
+    "navDashboard": "Dasbor",
+    "navSettings": "Pengaturan Profil",
+    "navEditProfile": "Edit Profil",
+    "navSwitchUser": "Ganti Pengguna",
+    "navChangePin": "Ubah PIN",
+    "changePinTitle": "Ubah PIN",
+    "changePinCurrentLabel": "PIN Saat Ini",
+    "changePinNewLabel": "PIN Baru",
+    "changePinConfirmLabel": "Konfirmasi PIN Baru",
+    "changePinSuccess": "PIN berhasil diubah!",
+    "changePinErrorCurrent": "PIN saat ini salah",
+    "changePinErrorEmpty": "Mohon isi semua kolom",
+    "navLogout": "Keluar",
+    "navLanguage": "Bahasa",
+    
+    "tileAITutor": "Tutor AI",
+    "tileMyCourses": "Kursus Saya",
+    "tileProgress": "Kemajuan",
+    "tileAIAssistant": "Asisten AI",
+    "tileCreateContent": "Buat Konten",
+    "tileAnalytics": "Analitik Siswa",
+    "tileManageClass": "Kelola Kelas",
+    
+    "aiAssistantTitle": "Pengaturan Asisten AI",
+    "activeProvider": "Provider Aktif",
+    "allProviders": "Semua Provider",
+    "noApiKey": "API Key belum dikonfigurasi",
+    "active": "Aktif",
+    "labelBaseUrl": "URL Dasar",
+    "labelApiKey": "API Key",
+    "resetUrl": "Reset URL",
+    "saveAndActivate": "Simpan & Aktifkan",
+    "providerSaved": "Pengaturan provider disimpan dan diaktifkan",
+    "labelModel": "Model",
+    "fetchModels": "Ambil Model",
+    
+    "themePlayful": "Ubah ke Serius",
+    "themeSerious": "Ubah ke Ceria",
+    
+    "featureComingSoon": "Fitur segera hadir!",
+    
+    "ccTitle": "Buat Konten",
+    "ccSnackBarError": "Mohon masukkan topik dan tingkat kelas",
+    "ccErrorApiKey": "API Key tidak ditemukan. Cek pengaturan Profil.",
+    "ccTopicLabel": "Topik",
+    "ccTopicHint": "cth., Fotosintesis",
+    "ccGradeLabel": "Tingkat Kelas",
+    "ccGradeHint": "cth., Kelas 5 SD",
+    "ccGenerateButton": "Buat Rencana Pembelajaran",
+    "ccContentPlaceholder": "Konten yang dibuat akan muncul di sini...",
+    "ccErrorGenerating": "Gagal membuat konten: {error}",
+    "@ccErrorGenerating": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    
+    "mcTitle": "Kelola Kelas",
+    "mcSnackBarCreated": "Kelas \"{name}\" dibuat! PIN: {pin}",
+    "@mcSnackBarCreated": {
+        "placeholders": {
+            "name": {},
+            "pin": {}
+        }
+    },
+    "mcErrorCreating": "Gagal membuat kelas: {error}",
+    "@mcErrorCreating": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    "mcDialogTitle": "Buat Kelas Baru",
+    "mcClassNameLabel": "Nama Kelas",
+    "mcClassDescLabel": "Deskripsi (Opsional)",
+    "mcEnrolledStudents": "Siswa Terdaftar:",
+    "mcNoStudents": "Belum ada siswa.",
+    "mcFabCreate": "Buat Kelas",
+    "mcNoClasses": "Belum ada kelas yang dibuat.",
+    
+    "commonCancel": "Batal",
+    "commonCreate": "Buat",
+    "commonSave": "Simpan",
+    "commonClose": "Tutup",
+    
+    "usTitle": "Pilih Pengguna",
+    "usEnterPin": "Masukkan PIN untuk {name}",
+    "@usEnterPin": {
+        "placeholders": {
+            "name": {}
+        }
+    },
+    "usLabelPin": "PIN",
+    "usVerify": "Verifikasi",
+    "usIncorrectPin": "PIN Salah",
+    "usSetPinTitle": "Atur PIN Anda",
+    "usSetPinMsg": "Buat PIN 4 digit untuk keamanan",
+    "usConfirmPin": "Konfirmasi PIN",
+    "usPinMismatch": "PIN tidak cocok",
+    "usPinLength": "PIN harus 4 digit",
+    "usSetPinButton": "Simpan PIN",
+    "usNoUsers": "Belum ada pengguna terdaftar",
+    "usAddUser": "Tambah Pengguna Baru",
+    
+    "profileTitle": "Profil & Pengaturan",
+    "profileGeminiConfig": "Konfigurasi Gemini API",
+    "profileApiKey": "API Key",
+    "profileApiKeySaved": "API Key Disimpan",
+    "profileSelectModel": "Pilih Model",
+    "profileRefreshModels": "Segarkan Model",
+    "profileNoModels": "Model tidak ditemukan. Cek API Key Anda.",
+    "profileSaveModel": "Simpan Model",
+    "profileModelSaved": "Model berhasil disimpan!",
+    
+    "aiTutorTitle": "Tutor AI",
+    "aiTutorSystemPrompt": "Anda adalah tutor AI yang membantu dan berpengetahuan luas untuk siswa. Jelaskan konsep dengan jelas dan sabar dalam bahasa yang diminta siswa.",
+    "aiTutorErrorApiKey": "API Key tidak ditemukan. Cek pengaturan Profil Anda.",
+    "aiTutorHint": "Tanya tutor Anda...",
+    "aiTutorError": "Error: {error}",
+    "@aiTutorError": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    
+    "mcCoursesTitle": "Kursus Saya",
+    "mcJoinClass": "Gabung Kelas",
+    "mcClassNotFound": "Kelas tidak ditemukan dengan PIN tersebut",
+    "mcAlreadyEnrolled": "Anda sudah terdaftar di kelas ini",
+    "mcJoinedSuccess": "Berhasil bergabung ke kelas \"{name}\"!",
+    "@mcJoinedSuccess": {
+        "placeholders": {
+            "name": {}
+        }
+    },
+    "mcErrorJoining": "Gagal bergabung kelas: {error}",
+    "@mcErrorJoining": {
+         "placeholders": {
+            "error": {}
+        }
+    },
+    "mcJoinDialogTitle": "Gabung Kelas",
+    "mcEnterPinLabel": "Masukkan PIN Kelas",
+    "mcCommonJoin": "Gabung",
+    "mcNoCourses": "Anda belum bergabung dengan kelas apapun.",
+    "mcTeacherPrefix": "Guru: {name}",
+    "@mcTeacherPrefix": {
+         "placeholders": {
+            "name": {}
+        }
+    },
+    
+    "languageSelectorTooltip": "Pilih Bahasa",
+    
+    "ccContentTypeLabel": "Jenis Konten",
+    "ccTypeLessonPlan": "Rencana Pelajaran",
+    "ccTypeMultipleChoice": "Pilihan Ganda",
+    "ccTypeEssay": "Essay",
+    "ccQuestionCountLabel": "Jumlah Soal",
+    "ccQuestionCountHint": "mis., 5",
+    "ccGenerateMC": "Buat Soal",
+    "ccGenerateEssay": "Buat Soal Essay",
+    "ccSaveToBank": "Simpan ke Bank Soal",
+    "ccEditQuestion": "Edit Soal",
+    "ccQuestionLabel": "Soal",
+    "ccOptionA": "Pilihan A",
+    "ccOptionB": "Pilihan B",
+    "ccOptionC": "Pilihan C",
+    "ccOptionD": "Pilihan D",
+    "ccCorrectAnswer": "Jawaban Benar",
+    "ccRubric": "Rubrik Penilaian",
+    "ccFeedback": "Umpan Balik",
+    "ccSaved": "Soal berhasil disimpan!",
+    "ccNoQuestions": "Belum ada soal yang dibuat.",
+    "ccParseError": "Gagal memproses respons AI. Silakan coba lagi.",
+    
+    "qbTitle": "Bank Soal",
+    "qbEmpty": "Belum ada soal di bank.",
+    "qbDeleteConfirm": "Hapus soal ini?",
+    "qbDeleted": "Soal dihapus",
+    "qbRecentQuestions": "Soal Terbaru",
+    "ccQuestionLabel": "Soal",
+    "ccErrorTimeout": "AI terlalu lama merespons. Coba kurangi jumlah soal.",
+    "mcJoiningClass": "Bergabung ke kelas..."
+}

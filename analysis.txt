@@ -1,0 +1,15 @@
+Analyzing alp...                                                
+
+   info - The private field _answers could be 'final' - lib\features\student\screens\exam_screen.dart:20:20 - prefer_final_fields
+   info - Statements in an if should be enclosed in a block - lib\features\student\screens\exam_screen.dart:182:25 - curly_braces_in_flow_control_structures
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\student\screens\exam_screen.dart:187:25 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\student\screens\exam_screen.dart:188:25 - deprecated_member_use
+  error - Target of URI doesn't exist: '../models/class_model.dart' - lib\features\student\screens\student_class_detail_screen.dart:7:8 - uri_does_not_exist
+  error - Undefined class 'ClassModel' - lib\features\student\screens\student_class_detail_screen.dart:20:3 - undefined_class
+   info - The private field _submissions could be 'final' - lib\features\student\screens\student_class_detail_screen.dart:22:34 - prefer_final_fields
+  error - Undefined name 'ClassModel' - lib\features\student\screens\student_class_detail_screen.dart:46:16 - undefined_identifier
+warning - The value of the local variable 'statusText' isn't used - lib\features\student\screens\student_class_detail_screen.dart:91:24 - unused_local_variable
+warning - The '!' will have no effect because the receiver can't be null - lib\features\student\screens\student_class_detail_screen.dart:120:49 - unnecessary_non_null_assertion
+warning - Unused import: 'package:flutter_bloc/flutter_bloc.dart' - lib\features\teacher\screens\class_detail_screen.dart:2:8 - unused_import
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\features\teacher\screens\class_detail_screen.dart:108:17 - prefer_const_literals_to_create_immutables
+

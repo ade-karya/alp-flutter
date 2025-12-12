@@ -1,0 +1,252 @@
+{
+    "@@locale": "en",
+    "appTitle": "Sikolah Apps",
+    "@appTitle": {
+        "description": "The title of the application"
+    },
+    "welcomeMessage": "Welcome to Adaptive Learning Platform",
+    "@welcomeMessage": {
+        "description": "Welcome message on the home screen"
+    },
+    "settingsLanguage": "Language",
+    "settingsLanguageEnglish": "English",
+    "settingsLanguageIndonesian": "Indonesian",
+    
+    "onboardingTitle1": "Welcome to Adaptive Learning",
+    "onboardingDesc1": "Personalized learning experience powered by AI.",
+    "onboardingTitle2": "Track Your Progress",
+    "onboardingDesc2": "Monitor your achievements and growth over time.",
+    "onboardingTitle3": "Connect with Teachers",
+    "onboardingDesc3": "Get guidance and support from your educators.",
+    "onboardingGetStarted": "Get Started",
+    "onboardingJoinCommunity": "Join our community of learners and educators.",
+    "loginTitle": "Login",
+    "loginButton": "Login",
+    "registerButton": "Register",
+    "registerLink": "New here? Create an account",
+    "roleStudent": "Student",
+    "roleTeacher": "Teacher",
+    "labelNISN": "NISN",
+    "labelNUPTK": "NUPTK",
+    "labelPIN": "PIN",
+    "labelIdentifier": "Identifier",
+    "errorEmptyNISN": "Please enter your NISN",
+    "errorEmptyNUPTK": "Please enter your NUPTK",
+    "errorEmptyPIN": "Please enter your PIN",
+    "errorShortPIN": "PIN must be at least 4 digits",
+    
+    "registerTitle": "Register",
+    "labelName": "Full Name",
+    "labelDateOfBirth": "Date of Birth",
+    "errorEmptyName": "Please enter your name",
+    "errorEmptyDate": "Please enter your date of birth",
+    "loginLink": "Already have an account? Login",
+    
+    "registerSelectRole": "Select Your Role",
+    "registerStudentTitle": "Student Registration",
+    "registerTeacherTitle": "Teacher Registration",
+    "labelConfirmPIN": "Confirm PIN",
+    "helperPIN": "Create a 4-digit PIN for security",
+    "errorConfirmPIN": "Please confirm your PIN",
+    "errorMatchPIN": "PINs do not match",
+    "labelSelectDate": "Select date",
+    "errorNISNLength": "NISN must be 10 digits",
+    "errorNUPTKLength": "NUPTK must be 16 digits",
+    "errorPINLength": "PIN must be exactly 4 digits",
+    "buttonNext": "Next",
+    "buttonBack": "Back",
+    "registrationSuccessTitle": "Registration Successful",
+    "registrationSuccessContent": "User {identifier} registered successfully. Please login.",
+    "@registrationSuccessContent": {
+        "placeholders": {
+            "identifier": {}
+        }
+    },
+    "buttonOK": "OK",
+
+    "dashboardStudent": "Student Portal",
+    "dashboardTeacher": "Teacher Portal",
+    "navDashboard": "Dashboard",
+    "navSettings": "Profile Settings",
+    "navEditProfile": "Edit Profile",
+    "navSwitchUser": "Switch User",
+    "navChangePin": "Change PIN",
+    "changePinTitle": "Change PIN",
+    "changePinCurrentLabel": "Current PIN",
+    "changePinNewLabel": "New PIN",
+    "changePinConfirmLabel": "Confirm New PIN",
+    "changePinSuccess": "PIN changed successfully!",
+    "changePinErrorCurrent": "Current PIN is incorrect",
+    "changePinErrorEmpty": "Please fill all fields",
+    "navLogout": "Logout",
+    "navLanguage": "Language",
+    
+    "tileAITutor": "AI Tutor",
+    "tileMyCourses": "My Courses",
+    "tileProgress": "Progress",
+    "tileAIAssistant": "AI Assistant",
+    "tileCreateContent": "Create Content",
+    "tileAnalytics": "Student Analytics",
+    "tileManageClass": "Manage Class",
+    
+    "aiAssistantTitle": "AI Assistant Settings",
+    "activeProvider": "Active Provider",
+    "allProviders": "All Providers",
+    "noApiKey": "No API Key configured",
+    "active": "Active",
+    "labelBaseUrl": "Base URL",
+    "labelApiKey": "API Key",
+    "resetUrl": "Reset URL",
+    "saveAndActivate": "Save & Activate",
+    "providerSaved": "Provider settings saved and activated",
+    "labelModel": "Model",
+    "fetchModels": "Fetch Models",
+    
+    "themePlayful": "Switch to Serious",
+    "themeSerious": "Switch to Playful",
+    
+    "featureComingSoon": "Feature coming soon!",
+    
+    "ccTitle": "Create Content",
+    "ccSnackBarError": "Please enter both topic and grade level",
+    "ccErrorApiKey": "API Key not found. Please check your Profile settings.",
+    "ccTopicLabel": "Topic",
+    "ccTopicHint": "e.g., Photosynthesis",
+    "ccGradeLabel": "Grade Level",
+    "ccGradeHint": "e.g., 5th Grade",
+    "ccGenerateButton": "Generate Lesson Plan",
+    "ccContentPlaceholder": "Generated content will appear here...",
+    "ccErrorGenerating": "Error generating content: {error}",
+    "@ccErrorGenerating": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    
+    "mcTitle": "Manage Classes",
+    "mcSnackBarCreated": "Class \"{name}\" created! PIN: {pin}",
+    "@mcSnackBarCreated": {
+        "placeholders": {
+            "name": {},
+            "pin": {}
+        }
+    },
+    "mcErrorCreating": "Error creating class: {error}",
+    "@mcErrorCreating": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    "mcDialogTitle": "Create New Class",
+    "mcClassNameLabel": "Class Name",
+    "mcClassDescLabel": "Description (Optional)",
+    "mcEnrolledStudents": "Enrolled Students:",
+    "mcNoStudents": "No students yet.",
+    "mcFabCreate": "Create Class",
+    "mcNoClasses": "No classes created yet.",
+    
+    "commonCancel": "Cancel",
+    "commonCreate": "Create",
+    "commonSave": "Save",
+    "commonClose": "Close",
+    
+    "usTitle": "Select User",
+    "usEnterPin": "Enter PIN for {name}",
+    "@usEnterPin": {
+        "placeholders": {
+            "name": {}
+        }
+    },
+    "usLabelPin": "PIN",
+    "usVerify": "Verify",
+    "usIncorrectPin": "Incorrect PIN",
+    "usSetPinTitle": "Set Your PIN",
+    "usSetPinMsg": "Please set a 4-digit PIN for security",
+    "usConfirmPin": "Confirm PIN",
+    "usPinMismatch": "PINs do not match",
+    "usPinLength": "PIN must be 4 digits",
+    "usSetPinButton": "Set PIN",
+    "usNoUsers": "No users registered yet",
+    "usAddUser": "Add New User",
+    
+    "profileTitle": "Profile & Settings",
+    "profileGeminiConfig": "Gemini API Configuration",
+    "profileApiKey": "API Key",
+    "profileApiKeySaved": "API Key Saved",
+    "profileSelectModel": "Select Model",
+    "profileRefreshModels": "Refresh Models",
+    "profileNoModels": "No models found. Check your API Key.",
+    "profileSaveModel": "Save Model",
+    "profileModelSaved": "Model saved successfully!",
+    
+    "aiTutorTitle": "AI Tutor",
+    "aiTutorSystemPrompt": "You are a helpful and knowledgeable AI tutor for students. Explain concepts clearly and patiently in the language the student asks in.",
+    "aiTutorErrorApiKey": "API Key not found. Please check your Profile settings.",
+    "aiTutorHint": "Ask your tutor...",
+    "aiTutorError": "Error: {error}",
+    "@aiTutorError": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    
+    "mcCoursesTitle": "My Courses",
+    "mcJoinClass": "Join Class",
+    "mcClassNotFound": "Class not found with that PIN",
+    "mcAlreadyEnrolled": "You are already enrolled in this class",
+    "mcJoinedSuccess": "Joined class \"{name}\"!",
+    "@mcJoinedSuccess": {
+        "placeholders": {
+            "name": {}
+        }
+    },
+    "mcErrorJoining": "Error joining class: {error}",
+    "@mcErrorJoining": {
+         "placeholders": {
+            "error": {}
+        }
+    },
+    "mcJoinDialogTitle": "Join Class",
+    "mcEnterPinLabel": "Enter Class PIN",
+    "mcCommonJoin": "Join",
+    "mcNoCourses": "You have not joined any classes yet.",
+    "mcTeacherPrefix": "Teacher: {name}",
+    "@mcTeacherPrefix": {
+         "placeholders": {
+            "name": {}
+        }
+    },
+    
+    "languageSelectorTooltip": "Select Language",
+    
+    "ccContentTypeLabel": "Content Type",
+    "ccTypeLessonPlan": "Lesson Plan",
+    "ccTypeMultipleChoice": "Multiple Choice",
+    "ccTypeEssay": "Essay",
+    "ccQuestionCountLabel": "Number of Questions",
+    "ccQuestionCountHint": "e.g., 5",
+    "ccGenerateMC": "Generate Questions",
+    "ccGenerateEssay": "Generate Essay Questions",
+    "ccSaveToBank": "Save to Question Bank",
+    "ccEditQuestion": "Edit Question",
+    "ccQuestionLabel": "Question",
+    "ccOptionA": "Option A",
+    "ccOptionB": "Option B",
+    "ccOptionC": "Option C",
+    "ccOptionD": "Option D",
+    "ccCorrectAnswer": "Correct Answer",
+    "ccRubric": "Scoring Rubric",
+    "ccFeedback": "Feedback",
+    "ccSaved": "Questions saved to bank!",
+    "ccNoQuestions": "No questions generated yet.",
+    "ccParseError": "Failed to parse AI response. Please try again.",
+    
+    "qbTitle": "Question Bank",
+    "qbEmpty": "No questions in the bank yet.",
+    "qbDeleteConfirm": "Delete this question?",
+    "qbDeleted": "Question deleted",
+    "qbRecentQuestions": "Recent Questions",
+    "ccQuestionLabel": "Questions",
+    "ccErrorTimeout": "AI is taking too long to respond. Try reducing the number of questions.",
+    "mcJoiningClass": "Joining class..."
+}
