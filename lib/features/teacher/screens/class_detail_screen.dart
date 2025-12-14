@@ -453,17 +453,20 @@ class _ClassDetailScreenState extends State<ClassDetailScreen>
       ),
     );
 
-    if (confirmed == true && mounted) {
+    if (confirmed == true) {
       await DatabaseHelper.instance.removeStudentFromClass(
         widget.classId,
         studentId,
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('"$studentName" berhasil dikeluarkan'),
-          backgroundColor: Colors.green,
-        ),
-      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('"$studentName" berhasil dikeluarkan'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
       // Auto-refresh handled by listener
     }
   }

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:alp/l10n/arb/app_localizations.dart';
 import '../../../core/auth/auth_cubit.dart';
 import '../../../core/database/database_helper.dart';
+import '../../../core/widgets/feature_tutorial.dart';
 import '../models/class_model.dart';
 import '../../../core/network/network_cubit.dart';
 
@@ -21,10 +22,92 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
   List<ClassModel> _classes = [];
   bool _isLoading = true;
 
+  // GlobalKeys untuk spotlight tutorial
+  final GlobalKey _fabKey = GlobalKey();
+  final GlobalKey _helpButtonKey = GlobalKey();
+  final GlobalKey _classCardKey = GlobalKey();
+  final GlobalKey _qrButtonKey = GlobalKey();
+  final GlobalKey _deleteButtonKey = GlobalKey();
+
+  // Tutorial steps yang dinamis berdasarkan state kelas
+  List<TutorialStep> get _tutorialSteps {
+    final steps = <TutorialStep>[
+      const TutorialStep(
+        title: 'Selamat Datang! 👋',
+        description:
+            'Ini adalah halaman Kelola Kelas. Di sini Anda dapat membuat dan mengelola kelas untuk siswa Anda.',
+        icon: Icons.school,
+      ),
+      TutorialStep(
+        title: 'Buat Kelas Baru',
+        description:
+            'Tekan tombol hijau "+" ini untuk membuat kelas baru. Setiap kelas akan memiliki PIN unik untuk siswa bergabung.',
+        icon: Icons.add_circle,
+        targetKey: _fabKey,
+      ),
+    ];
+
+    // Hanya tampilkan langkah-langkah ini jika ada kelas
+    if (_classes.isNotEmpty) {
+      steps.addAll([
+        TutorialStep(
+          title: 'Lihat Detail Kelas',
+          description:
+              'Tekan pada kartu kelas untuk melihat detail, daftar siswa, dan mengelola tugas untuk kelas tersebut.',
+          icon: Icons.touch_app,
+          targetKey: _classCardKey,
+        ),
+        TutorialStep(
+          title: 'Bagikan QR Code',
+          description:
+              'Gunakan tombol QR ini untuk menampilkan kode QR. Siswa dapat scan kode ini untuk bergabung ke kelas Anda.',
+          icon: Icons.qr_code,
+          targetKey: _qrButtonKey,
+        ),
+        TutorialStep(
+          title: 'Hapus Kelas',
+          description:
+              'Tombol hapus ini akan menghapus kelas beserta semua data terkait. Gunakan dengan hati-hati!',
+          icon: Icons.delete_outline,
+          targetKey: _deleteButtonKey,
+        ),
+      ]);
+    }
+
+    steps.add(
+      TutorialStep(
+        title: 'Bantuan',
+        description:
+            'Tekan tombol bantuan (?) ini kapan saja untuk melihat panduan ini lagi. Selamat mengajar! 🎉',
+        icon: Icons.help_outline,
+        targetKey: _helpButtonKey,
+      ),
+    );
+
+    return steps;
+  }
+
   @override
   void initState() {
     super.initState();
     _loadClasses();
+    // Tampilkan tutorial saat pertama kali (setelah data loaded)
+  }
+
+  void _showTutorialIfFirstTime() {
+    FeatureTutorial.showIfFirstTime(
+      context: context,
+      steps: _tutorialSteps,
+      tutorialKey: 'manage_class',
+    );
+  }
+
+  void _showTutorial() {
+    FeatureTutorial.show(
+      context: context,
+      steps: _tutorialSteps,
+      tutorialKey: 'manage_class',
+    );
   }
 
   Future<void> _loadClasses() async {
@@ -48,6 +131,10 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
         setState(() {
           _classes = classMaps.map((m) => ClassModel.fromMap(m)).toList();
           _isLoading = false;
+        });
+        // Tampilkan tutorial setelah data loaded
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showTutorialIfFirstTime();
         });
       }
     } catch (e) {
@@ -647,14 +734,27 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
+        actions: [
+          // Help button untuk menampilkan tutorial
+          IconButton(
+            key: _helpButtonKey,
+            icon: const Icon(Icons.help_outline),
+            tooltip: 'Panduan',
+            onPressed: _showTutorial,
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showCreateDialog,
-        label: Text(l10n.mcFabCreate),
-        icon: const Icon(Icons.add),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-        elevation: 4,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 60), // Hindari navbar
+        child: FloatingActionButton.extended(
+          key: _fabKey,
+          onPressed: _showCreateDialog,
+          label: Text(l10n.mcFabCreate),
+          icon: const Icon(Icons.add),
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+          elevation: 4,
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.green))
@@ -708,7 +808,8 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
 
   Widget _buildClassList() {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      // Tambah padding bawah untuk hindari navbar
+      padding: const EdgeInsets.only(left: 16, top: 16, right: 16, bottom: 120),
       itemCount: _classes.length,
       itemBuilder: (context, index) {
         final cls = _classes[index];
@@ -721,6 +822,7 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
         final colorPair = colors[index % colors.length];
 
         return Container(
+          key: index == 0 ? _classCardKey : null,
           margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -839,12 +941,14 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
                       ),
                       const Spacer(),
                       IconButton(
+                        key: index == 0 ? _qrButtonKey : null,
                         icon: const Icon(Icons.qr_code),
                         color: Colors.blue,
                         tooltip: 'Show QR',
                         onPressed: () => _showQrDialog(cls),
                       ),
                       IconButton(
+                        key: index == 0 ? _deleteButtonKey : null,
                         icon: const Icon(Icons.delete_outline),
                         color: Colors.red,
                         tooltip: 'Hapus Kelas',

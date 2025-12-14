@@ -7,6 +7,9 @@ import '../../../core/auth/auth_cubit.dart';
 import '../../../core/auth/models/user_model.dart';
 import '../../../core/database/database_helper.dart';
 
+import '../../../core/theme/theme_cubit.dart';
+import '../../../core/theme/app_themes.dart';
+
 class UserSelectionScreen extends StatelessWidget {
   const UserSelectionScreen({super.key});
 
@@ -134,10 +137,14 @@ class UserSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isWizard = context.select(
+      (ThemeCubit cubit) => cubit.state == AppThemeMode.wizard,
+    );
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isWizard ? Colors.transparent : Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isWizard ? Colors.transparent : Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Row(
@@ -209,12 +216,12 @@ class UserSelectionScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text(
+                        Text(
                           'Pilih Pengguna',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: isWizard ? Colors.white : Colors.black87,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -222,7 +229,7 @@ class UserSelectionScreen extends StatelessWidget {
                           'Silakan pilih akun untuk masuk',
                           style: TextStyle(
                             fontSize: 16,
-                            color: Colors.grey[600],
+                            color: isWizard ? Colors.white70 : Colors.grey[600],
                           ),
                         ),
                         const SizedBox(height: 32),
@@ -244,8 +251,7 @@ class UserSelectionScreen extends StatelessWidget {
                               gridDelegate:
                                   const SliverGridDelegateWithMaxCrossAxisExtent(
                                     maxCrossAxisExtent: 400,
-                                    mainAxisExtent:
-                                        160, // Increased height to prevent overflow
+                                    mainAxisExtent: 160,
                                     crossAxisSpacing: 16,
                                     mainAxisSpacing: 16,
                                   ),
@@ -254,6 +260,7 @@ class UserSelectionScreen extends StatelessWidget {
                                 final user = users[index];
                                 return _UserCard(
                                   user: user,
+                                  isWizard: isWizard,
                                   onTap: () async {
                                     // Check if user has PIN
                                     if (user.pin == null || user.pin!.isEmpty) {
@@ -315,12 +322,19 @@ class UserSelectionScreen extends StatelessWidget {
                             icon: const Icon(Icons.person_add),
                             label: Text(l10n.usAddUser),
                             style: ElevatedButton.styleFrom(
+                              backgroundColor: isWizard
+                                  ? Colors.black.withValues(alpha: 0.4)
+                                  : null,
+                              foregroundColor: isWizard ? Colors.white : null,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 24,
                                 vertical: 16,
                               ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
+                                side: isWizard
+                                    ? const BorderSide(color: Colors.white24)
+                                    : BorderSide.none,
                               ),
                             ),
                           ),
@@ -342,11 +356,13 @@ class _UserCard extends StatelessWidget {
   final User user;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final bool isWizard;
 
   const _UserCard({
     required this.user,
     required this.onTap,
     required this.onDelete,
+    required this.isWizard,
   });
 
   @override
@@ -369,6 +385,14 @@ class _UserCard extends StatelessWidget {
         return false;
       },
       child: Card(
+        color: isWizard ? Colors.black.withValues(alpha: 0.4) : Colors.white,
+        elevation: isWizard ? 0 : 1,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: isWizard
+              ? BorderSide(color: Colors.amber.withValues(alpha: 0.3))
+              : BorderSide.none,
+        ),
         margin: const EdgeInsets.only(bottom: 12),
         child: InkWell(
           onTap: onTap,
@@ -395,20 +419,27 @@ class _UserCard extends StatelessWidget {
                     children: [
                       Text(
                         user.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: isWizard ? Colors.white : Colors.black87,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         user.role == UserRole.student ? 'Student' : 'Teacher',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isWizard ? Colors.white70 : Colors.grey[600],
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '${user.role == UserRole.student ? 'NISN' : 'NUPTK'}: ${user.maskedIdentifier}',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isWizard ? Colors.white38 : Colors.grey[500],
+                        ),
                       ),
                     ],
                   ),
@@ -418,7 +449,10 @@ class _UserCard extends StatelessWidget {
                   onPressed: onDelete,
                 ),
                 const SizedBox(width: 8),
-                Icon(Icons.arrow_forward_ios, color: Colors.grey[400]),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: isWizard ? Colors.white24 : Colors.grey[400],
+                ),
               ],
             ),
           ),

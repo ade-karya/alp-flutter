@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/auth/auth_cubit.dart';
 import '../../../../l10n/arb/app_localizations.dart';
 import 'package:alp/features/shared/widgets/language_selector.dart';
+import '../../../../core/theme/app_themes.dart';
+import '../../../../core/theme/theme_cubit.dart';
+import '../../../../core/theme/wizard_background.dart';
 
 // Helper for enabling mouse drag
 class AppScrollBehavior extends MaterialScrollBehavior {
@@ -47,35 +50,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     var l10n = AppLocalizations.of(context)!;
+    final isWizard = context.watch<ThemeCubit>().state == AppThemeMode.wizard;
+
     final List<_OnboardingPage> pages = [
       _OnboardingPage(
         title: l10n.onboardingTitle1,
         description: l10n.onboardingDesc1,
         icon: Icons.auto_awesome,
-        color: Colors.blueAccent,
+        color: isWizard ? Colors.blueAccent : Colors.blueAccent,
       ),
       _OnboardingPage(
         title: l10n.onboardingTitle2,
         description: l10n.onboardingDesc2,
         icon: Icons.insights,
-        color: Colors.purpleAccent,
+        color: isWizard ? Colors.deepPurpleAccent : Colors.purpleAccent,
       ),
       _OnboardingPage(
         title: l10n.onboardingTitle3,
         description: l10n.onboardingDesc3,
         icon: Icons.people,
-        color: Colors.orangeAccent,
+        color: isWizard ? Colors.amberAccent : Colors.orangeAccent,
       ),
     ];
 
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: const [LanguageSelector(), SizedBox(width: 16)],
-      ),
-      body: Stack(
+    Widget buildContent() {
+      return Stack(
         children: [
           PageView.builder(
             controller: _pageController,
@@ -125,8 +124,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: _currentPage == index
-                        ? Theme.of(context).primaryColor
-                        : Colors.grey.withAlpha(100), // Updated for deprecation
+                        ? (isWizard
+                              ? const Color(0xFFFFD700)
+                              : Theme.of(context).primaryColor)
+                        : (isWizard
+                              ? Colors.white24
+                              : Colors.grey.withAlpha(100)),
                   ),
                 ),
               ),
@@ -143,8 +146,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         curve: Curves.easeInOut,
                       );
                     },
-                    label: Text(l10n.buttonNext),
-                    icon: const Icon(Icons.arrow_forward),
+                    label: Text(
+                      l10n.buttonNext,
+                      style: TextStyle(
+                        fontFamily: isWizard ? 'Cinzel' : null,
+                        fontWeight: isWizard ? FontWeight.bold : null,
+                        color: isWizard ? const Color(0xFF4A148C) : null,
+                      ),
+                    ),
+                    icon: Icon(
+                      Icons.arrow_forward,
+                      color: isWizard ? const Color(0xFF4A148C) : null,
+                    ),
+                    style: isWizard
+                        ? FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFD700),
+                          )
+                        : null,
                   )
                 : const SizedBox.shrink(),
           ),
@@ -159,13 +177,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         curve: Curves.easeInOut,
                       );
                     },
-                    icon: const Icon(Icons.arrow_back),
-                    label: Text(l10n.buttonBack),
+                    icon: Icon(
+                      Icons.arrow_back,
+                      color: isWizard ? Colors.white70 : null,
+                    ),
+                    label: Text(
+                      l10n.buttonBack,
+                      style: TextStyle(
+                        color: isWizard ? Colors.white70 : null,
+                        fontFamily: isWizard ? 'Cinzel' : null,
+                      ),
+                    ),
                   )
                 : const SizedBox.shrink(),
           ),
         ],
+      );
+    }
+
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: isWizard ? Colors.transparent : null,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: const [LanguageSelector(), SizedBox(width: 16)],
+        iconTheme: IconThemeData(color: isWizard ? Colors.white : Colors.black),
       ),
+      body: isWizard ? WizardBackground(child: buildContent()) : buildContent(),
     );
   }
 }
@@ -187,12 +226,25 @@ class _OnboardingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
+    final isWizard = context.watch<ThemeCubit>().state == AppThemeMode.wizard;
 
     final iconWidget = Container(
       padding: EdgeInsets.all(isLandscape ? 20 : 32),
       decoration: BoxDecoration(
-        color: color.withAlpha(30),
+        color: isWizard ? color.withValues(alpha: 0.2) : color.withAlpha(30),
         shape: BoxShape.circle,
+        border: isWizard
+            ? Border.all(color: color.withValues(alpha: 0.5))
+            : null,
+        boxShadow: isWizard
+            ? [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                ),
+              ]
+            : null,
       ),
       child: Icon(icon, size: isLandscape ? 60 : 100, color: color),
     );
@@ -206,13 +258,19 @@ class _OnboardingPage extends StatelessWidget {
           style: TextStyle(
             fontSize: isLandscape ? 22 : 28,
             fontWeight: FontWeight.bold,
+            color: isWizard ? Colors.white : Colors.black87,
+            fontFamily: isWizard ? 'Cinzel' : null,
           ),
           textAlign: TextAlign.center,
         ),
         SizedBox(height: isLandscape ? 8 : 16),
         Text(
           description,
-          style: TextStyle(fontSize: isLandscape ? 14 : 16, color: Colors.grey),
+          style: TextStyle(
+            fontSize: isLandscape ? 14 : 16,
+            color: isWizard ? Colors.white70 : Colors.grey,
+            fontFamily: isWizard ? 'Lato' : null,
+          ),
           textAlign: TextAlign.center,
         ),
       ],
@@ -251,20 +309,29 @@ class _FinalPage extends StatelessWidget {
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
     final screenHeight = MediaQuery.of(context).size.height;
+    final isWizard = context.watch<ThemeCubit>().state == AppThemeMode.wizard;
 
     // Icon with gradient
     final iconWidget = Container(
       padding: EdgeInsets.all(isLandscape ? 16 : 24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue.shade400, Colors.purple.shade400],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: isWizard
+            ? const LinearGradient(
+                colors: [Color(0xFF4A148C), Color(0xFFFFD700)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : LinearGradient(
+                colors: [Colors.blue.shade400, Colors.purple.shade400],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withAlpha(80),
+            color: isWizard
+                ? const Color(0xFFFFD700).withValues(alpha: 0.3)
+                : Colors.blue.withAlpha(80),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -286,6 +353,8 @@ class _FinalPage extends StatelessWidget {
           style: TextStyle(
             fontSize: isLandscape ? 22 : 28,
             fontWeight: FontWeight.bold,
+            color: isWizard ? Colors.white : Colors.black87,
+            fontFamily: isWizard ? 'Cinzel' : null,
           ),
           textAlign: TextAlign.center,
         ),
@@ -295,7 +364,8 @@ class _FinalPage extends StatelessWidget {
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: isLandscape ? 12 : 14,
-            color: Colors.grey.shade600,
+            color: isWizard ? Colors.white70 : Colors.grey.shade600,
+            fontFamily: isWizard ? 'Lato' : null,
           ),
         ),
       ],
@@ -312,10 +382,25 @@ class _FinalPage extends StatelessWidget {
             height: 48,
             child: FilledButton.icon(
               onPressed: () => onAction('/login'),
-              icon: const Icon(Icons.login),
-              label: Text(l10n.loginButton),
+              icon: Icon(
+                Icons.login,
+                color: isWizard ? const Color(0xFFFFD700) : null,
+              ),
+              label: Text(
+                l10n.loginButton,
+                style: TextStyle(
+                  color: isWizard ? const Color(0xFFFFD700) : null,
+                  fontFamily: isWizard ? 'Cinzel' : null,
+                  fontWeight: isWizard ? FontWeight.bold : null,
+                ),
+              ),
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.blue.shade600,
+                backgroundColor: isWizard
+                    ? const Color(0xFF4A148C)
+                    : Colors.blue.shade600,
+                side: isWizard
+                    ? const BorderSide(color: Color(0xFFFFD700))
+                    : null,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -330,12 +415,22 @@ class _FinalPage extends StatelessWidget {
           height: 48,
           child: FilledButton.icon(
             onPressed: () => onAction('/register'),
-            icon: const Icon(Icons.person_add),
-            label: Text(l10n.registerButton),
+            icon: Icon(
+              Icons.person_add,
+              color: isWizard ? const Color(0xFF4A148C) : Colors.white,
+            ),
+            label: Text(
+              l10n.registerButton,
+              style: TextStyle(
+                color: isWizard ? const Color(0xFF4A148C) : Colors.white,
+                fontFamily: isWizard ? 'Cinzel' : null,
+                fontWeight: isWizard ? FontWeight.bold : null,
+              ),
+            ),
             style: FilledButton.styleFrom(
               backgroundColor: hasUsers
-                  ? Colors.grey.shade600
-                  : Colors.blue.shade600,
+                  ? (isWizard ? Colors.white70 : Colors.grey.shade600)
+                  : (isWizard ? const Color(0xFFFFD700) : Colors.blue.shade600),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -365,7 +460,7 @@ class _FinalPage extends StatelessWidget {
               Container(
                 width: 1,
                 height: screenHeight * 0.5,
-                color: Colors.grey.shade200,
+                color: isWizard ? Colors.white24 : Colors.grey.shade200,
               ),
               Expanded(child: Center(child: buttons)),
             ],

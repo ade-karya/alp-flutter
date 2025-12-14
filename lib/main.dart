@@ -106,7 +106,9 @@ class MyApp extends StatelessWidget {
                               AppLocalizations.of(context)!.appTitle,
                           theme: themeMode == AppThemeMode.serious
                               ? AppThemes.serious
-                              : AppThemes.playful,
+                              : themeMode == AppThemeMode.playful
+                              ? AppThemes.playful
+                              : AppThemes.wizard,
                           locale: Locale(settingsState.locale),
                           localizationsDelegates:
                               AppLocalizations.localizationsDelegates,

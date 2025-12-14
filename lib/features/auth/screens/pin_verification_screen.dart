@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/theme/app_themes.dart';
+import '../../../core/theme/theme_cubit.dart';
+import '../../../core/theme/wizard_background.dart';
 
 class PinVerificationScreen extends StatefulWidget {
   final String userName;
@@ -49,9 +53,10 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Enter PIN')),
-      body: Center(
+    final isWizard = context.watch<ThemeCubit>().state == AppThemeMode.wizard;
+
+    Widget buildContent() {
+      return Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -60,19 +65,34 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
               Icon(
                 Icons.lock_outline,
                 size: 80,
-                color: Theme.of(context).colorScheme.primary,
+                color: isWizard
+                    ? const Color(0xFFFFD700)
+                    : Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: 24),
               Text(
                 'Welcome back,',
-                style: Theme.of(context).textTheme.headlineSmall,
+                style: isWizard
+                    ? const TextStyle(
+                        fontSize: 24,
+                        color: Colors.white70,
+                        fontFamily: 'Cinzel',
+                      )
+                    : Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 8),
               Text(
                 widget.userName,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: isWizard
+                    ? const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontFamily: 'Cinzel',
+                      )
+                    : Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
               ),
               const SizedBox(height: 32),
               SizedBox(
@@ -83,17 +103,34 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                   obscureText: true,
                   textAlign: TextAlign.center,
                   maxLength: 4,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 32,
                     letterSpacing: 16,
                     fontWeight: FontWeight.bold,
+                    color: isWizard ? Colors.white : null,
                   ),
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
                     hintText: '••••',
+                    hintStyle: TextStyle(
+                      color: isWizard ? Colors.white30 : null,
+                    ),
                     errorText: _errorMessage,
+                    errorStyle: TextStyle(
+                      color: isWizard ? Colors.redAccent : null,
+                    ),
                     counterText: '',
                     border: const OutlineInputBorder(),
+                    enabledBorder: isWizard
+                        ? OutlineInputBorder(
+                            borderSide: const BorderSide(color: Colors.white24),
+                            borderRadius: BorderRadius.circular(8),
+                          )
+                        : null,
+                    filled: isWizard,
+                    fillColor: isWizard
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : null,
                   ),
                   onChanged: (value) {
                     if (_errorMessage != null) {
@@ -109,11 +146,53 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              FilledButton(onPressed: _verifyPin, child: const Text('Verify')),
+              FilledButton(
+                onPressed: _verifyPin,
+                style: isWizard
+                    ? FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF4A148C),
+                        foregroundColor: const Color(0xFFFFD700),
+                        side: const BorderSide(color: Color(0xFFFFD700)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 48,
+                          vertical: 16,
+                        ),
+                      )
+                    : null,
+                child: Text(
+                  'Verify',
+                  style: TextStyle(
+                    fontSize: isWizard ? 16 : null,
+                    fontWeight: isWizard ? FontWeight.bold : null,
+                    fontFamily: isWizard ? 'Cinzel' : null,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: isWizard ? Colors.transparent : null,
+      appBar: AppBar(
+        title: Text(
+          'Enter PIN',
+          style: isWizard ? const TextStyle(fontFamily: 'Cinzel') : null,
+        ),
+        backgroundColor: isWizard ? Colors.transparent : null,
+        iconTheme: isWizard ? const IconThemeData(color: Colors.white) : null,
+        titleTextStyle: isWizard
+            ? const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontFamily: 'Cinzel',
+                fontWeight: FontWeight.bold,
+              )
+            : null,
       ),
+      body: isWizard ? WizardBackground(child: buildContent()) : buildContent(),
     );
   }
 }

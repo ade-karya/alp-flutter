@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:alp/l10n/arb/app_localizations.dart';
+import '../../../core/theme/app_themes.dart';
+import '../../../core/theme/theme_cubit.dart';
 import '../../../core/models/ai_provider.dart';
 import '../../../core/settings/settings_cubit.dart';
 import '../../../core/services/gemini_openai_service.dart';
@@ -27,20 +29,24 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isWizard = context.watch<ThemeCubit>().state == AppThemeMode.wizard;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: isWizard ? Colors.transparent : Colors.grey[50],
       appBar: AppBar(
         title: Text(
           l10n.aiAssistantTitle,
-          style: const TextStyle(
-            color: Colors.black87,
+          style: TextStyle(
+            color: isWizard ? Colors.white : Colors.black87,
             fontWeight: FontWeight.bold,
+            fontFamily: isWizard ? 'Cinzel' : null,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: isWizard ? Colors.transparent : Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(
+          color: isWizard ? Colors.white : Colors.black87,
+        ),
       ),
       drawer: const AppDrawer(),
       body: BlocBuilder<SettingsCubit, SettingsState>(
@@ -55,19 +61,35 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
               // Active Provider Card
               Container(
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blue[400]!, Colors.blue[700]!],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  gradient: isWizard
+                      ? const LinearGradient(
+                          colors: [
+                            Color(0xFF4A148C),
+                            Color(0xFF7B1FA2),
+                          ], // Purple wizard
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : LinearGradient(
+                          colors: [Colors.blue[400]!, Colors.blue[700]!],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.blue.withAlpha(100),
-                      blurRadius: 10,
+                      color: isWizard
+                          ? const Color(0xFFFFD700).withValues(
+                              alpha: 0.3,
+                            ) // Gold glow
+                          : Colors.blue.withAlpha(100),
+                      blurRadius: isWizard ? 15 : 10,
                       offset: const Offset(0, 4),
                     ),
                   ],
+                  border: isWizard
+                      ? Border.all(color: Colors.white24, width: 1)
+                      : null,
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -76,13 +98,21 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withAlpha(50),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
+                          border: isWizard
+                              ? Border.all(
+                                  color: const Color(0xFFFFD700),
+                                  width: 1,
+                                )
+                              : null,
                         ),
                         child: Icon(
                           _getProviderIcon(state.activeProviderType),
                           size: 32,
-                          color: Colors.white,
+                          color: isWizard
+                              ? const Color(0xFFFFD700)
+                              : Colors.white,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -94,16 +124,20 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                               l10n.activeProvider,
                               style: TextStyle(
                                 fontSize: 13,
-                                color: Colors.white.withAlpha(200),
+                                color: Colors.white.withValues(alpha: 0.8),
+                                fontFamily: isWizard ? 'Lato' : null,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               state.activeProviderType.displayName,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: isWizard
+                                    ? const Color(0xFFFFD700)
+                                    : Colors.white,
+                                fontFamily: isWizard ? 'Cinzel' : null,
                               ),
                             ),
                           ],
@@ -116,12 +150,16 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
               const SizedBox(height: 24),
               Text(
                 l10n.allProviders,
-                style: Theme.of(context).textTheme.titleMedium,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: isWizard ? Colors.white : null,
+                  fontFamily: isWizard ? 'Cinzel' : null,
+                ),
               ),
               const SizedBox(height: 8),
               // Provider List
               ...AIProviderType.values.map(
-                (type) => _buildProviderCard(context, state, type, l10n),
+                (type) =>
+                    _buildProviderCard(context, state, type, l10n, isWizard),
               ),
             ],
           );
@@ -135,6 +173,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
     SettingsState state,
     AIProviderType type,
     AppLocalizations l10n,
+    bool isWizard,
   ) {
     final provider = state.providers[type]!;
     final isExpanded = _expandedProvider == type;
@@ -143,17 +182,26 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isWizard ? Colors.black.withValues(alpha: 0.4) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha(25),
+            color: isWizard
+                ? Colors.black.withValues(alpha: 0.2)
+                : Colors.grey.withAlpha(25),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
         border: isActive
-            ? Border.all(color: Colors.blue.withAlpha(100), width: 2)
+            ? Border.all(
+                color: isWizard
+                    ? const Color(0xFFFFD700)
+                    : Colors.blue.withAlpha(100),
+                width: 2,
+              )
+            : isWizard
+            ? Border.all(color: Colors.white10)
             : null,
       ),
       child: Column(
@@ -163,13 +211,24 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: isActive
-                    ? Colors.blue.withAlpha(25)
-                    : Colors.grey.withAlpha(15),
+                    ? (isWizard
+                          ? const Color(0xFFFFD700).withValues(alpha: 0.2)
+                          : Colors.blue.withAlpha(25))
+                    : (isWizard
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.grey.withAlpha(15)),
                 borderRadius: BorderRadius.circular(10),
+                border: isWizard && isActive
+                    ? Border.all(
+                        color: const Color(0xFFFFD700).withValues(alpha: 0.5),
+                      )
+                    : null,
               ),
               child: Icon(
                 _getProviderIcon(type),
-                color: isActive ? Colors.blue : Colors.grey[600],
+                color: isActive
+                    ? (isWizard ? const Color(0xFFFFD700) : Colors.blue)
+                    : (isWizard ? Colors.white70 : Colors.grey[600]),
                 size: 24,
               ),
             ),
@@ -178,16 +237,22 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
               style: TextStyle(
                 fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                 fontSize: 16,
+                color: isWizard ? Colors.white : Colors.black87,
+                fontFamily: isWizard ? 'Cinzel' : null,
               ),
             ),
             subtitle: provider.apiKey.isNotEmpty
                 ? Text(
                     'API Key: ••••${provider.apiKey.length > 4 ? provider.apiKey.substring(provider.apiKey.length - 4) : ""}',
-                    style: TextStyle(color: Colors.grey[600]),
+                    style: TextStyle(
+                      color: isWizard ? Colors.white60 : Colors.grey[600],
+                    ),
                   )
                 : Text(
                     l10n.noApiKey,
-                    style: TextStyle(color: Colors.grey[500]),
+                    style: TextStyle(
+                      color: isWizard ? Colors.white38 : Colors.grey[500],
+                    ),
                   ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -199,22 +264,32 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withAlpha(25),
+                      color: isWizard
+                          ? const Color(0xFFFFD700).withValues(alpha: 0.2)
+                          : Colors.blue.withAlpha(25),
                       borderRadius: BorderRadius.circular(20),
+                      border: isWizard
+                          ? Border.all(
+                              color: const Color(
+                                0xFFFFD700,
+                              ).withValues(alpha: 0.5),
+                            )
+                          : null,
                     ),
                     child: Text(
                       l10n.active,
-                      style: const TextStyle(
-                        color: Colors.blue,
+                      style: TextStyle(
+                        color: isWizard ? const Color(0xFFFFD700) : Colors.blue,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
+                        fontFamily: isWizard ? 'Cinzel' : null,
                       ),
                     ),
                   ),
                 const SizedBox(width: 8),
                 Icon(
                   isExpanded ? Icons.expand_less : Icons.expand_more,
-                  color: Colors.grey[400],
+                  color: isWizard ? Colors.white54 : Colors.grey[400],
                 ),
               ],
             ),
@@ -224,7 +299,8 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
               });
             },
           ),
-          if (isExpanded) _buildExpandedContent(context, provider, l10n),
+          if (isExpanded)
+            _buildExpandedContent(context, provider, l10n, isWizard),
         ],
       ),
     );
@@ -234,6 +310,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
     BuildContext context,
     AIProvider provider,
     AppLocalizations l10n,
+    bool isWizard,
   ) {
     // Initialize local state from provider if not already set
     _localUrls[provider.type] ??= provider.baseUrl;
@@ -246,54 +323,59 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
       text: _localApiKeys[provider.type],
     );
 
+    InputDecoration buildInputDecoration(String label, {Widget? suffixIcon}) {
+      return InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: isWizard ? Colors.white70 : null),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: isWizard ? Colors.white24 : Colors.grey[300]!,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: isWizard ? const Color(0xFFFFD700) : Colors.blue,
+            width: 2,
+          ),
+        ),
+        filled: true,
+        fillColor: isWizard
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.grey[50],
+        hintStyle: TextStyle(color: isWizard ? Colors.white30 : null),
+        suffixIcon: suffixIcon,
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Divider(),
+          Divider(color: isWizard ? Colors.white24 : null),
           const SizedBox(height: 8),
           TextField(
             controller: urlController,
-            decoration: InputDecoration(
-              labelText: l10n.labelBaseUrl,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.blue, width: 2),
-              ),
-              filled: true,
-              fillColor: Colors.grey[50],
-              hintText: provider.type.defaultBaseUrl,
-            ),
+            style: TextStyle(color: isWizard ? Colors.white : Colors.black87),
+            decoration: buildInputDecoration(
+              l10n.labelBaseUrl,
+            ).copyWith(hintText: provider.type.defaultBaseUrl),
             onChanged: (value) => _localUrls[provider.type] = value,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: apiKeyController,
-            decoration: InputDecoration(
-              labelText: l10n.labelApiKey,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.blue, width: 2),
-              ),
-              filled: true,
-              fillColor: Colors.grey[50],
+            style: TextStyle(color: isWizard ? Colors.white : Colors.black87),
+            decoration: buildInputDecoration(
+              l10n.labelApiKey,
               suffixIcon: IconButton(
-                icon: const Icon(Icons.visibility_off),
+                icon: Icon(
+                  Icons.visibility_off,
+                  color: isWizard ? Colors.white54 : null,
+                ),
                 onPressed: () {},
               ),
             ),
@@ -311,25 +393,14 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                       provider.selectedModel ??
                       provider.type.defaultModel,
                   isExpanded: true,
-                  decoration: InputDecoration(
-                    labelText: l10n.labelModel,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.blue,
-                        width: 2,
-                      ),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[50],
+                  dropdownColor: isWizard
+                      ? const Color(0xFF2E004B)
+                      : Colors.white,
+                  style: TextStyle(
+                    color: isWizard ? Colors.white : Colors.black87,
+                    fontSize: 16,
                   ),
+                  decoration: buildInputDecoration(l10n.labelModel),
                   items: () {
                     final current =
                         _localSelectedModels[provider.type] ??
@@ -385,7 +456,10 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                 const CircularProgressIndicator()
               else
                 IconButton(
-                  icon: const Icon(Icons.refresh),
+                  icon: Icon(
+                    Icons.refresh,
+                    color: isWizard ? const Color(0xFFFFD700) : null,
+                  ),
                   tooltip: l10n.fetchModels,
                   onPressed: () => _fetchModels(
                     provider.type,
@@ -402,16 +476,19 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                 child: OutlinedButton.icon(
                   onPressed: () {
                     // Reset to default URL
-                    // Reset to default URL - update local state and controller
                     _localUrls[provider.type] = provider.type.defaultBaseUrl;
                     urlController.text = provider.type.defaultBaseUrl;
                   },
                   icon: const Icon(Icons.refresh),
                   label: Text(l10n.resetUrl),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.blue,
+                    foregroundColor: isWizard
+                        ? const Color(0xFFFFD700)
+                        : Colors.blue,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: const BorderSide(color: Colors.blue),
+                    side: BorderSide(
+                      color: isWizard ? const Color(0xFFFFD700) : Colors.blue,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -448,12 +525,17 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                   icon: const Icon(Icons.check),
                   label: Text(l10n.saveAndActivate),
                   style: FilledButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: isWizard
+                        ? const Color(0xFF4A148C)
+                        : Colors.blue,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    side: isWizard
+                        ? const BorderSide(color: Colors.white24)
+                        : null,
                   ),
                 ),
               ),

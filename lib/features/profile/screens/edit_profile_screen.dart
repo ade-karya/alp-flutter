@@ -4,6 +4,9 @@ import 'package:intl/intl.dart';
 import '../../../core/auth/auth_cubit.dart';
 import '../../../core/auth/models/user_model.dart';
 import '../../../core/database/database_helper.dart';
+import '../../../core/theme/app_themes.dart';
+import '../../../core/theme/theme_cubit.dart';
+import '../../../core/theme/wizard_background.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -96,55 +99,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.red[700],
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(8),
-                  bottomLeft: Radius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Sikolah',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.green[700],
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(8),
-                  bottomRight: Radius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Apps',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      body: BlocBuilder<AuthCubit, AuthState>(
+    final isWizard = context.watch<ThemeCubit>().state == AppThemeMode.wizard;
+
+    Widget buildContent() {
+      return BlocBuilder<AuthCubit, AuthState>(
         builder: (context, state) {
           if (state is! Authenticated) {
             return const Center(child: CircularProgressIndicator());
@@ -160,38 +118,66 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Immutable identifier display
-                  Card(
-                    color: Colors.grey[200],
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            user.role == UserRole.student ? 'NISN' : 'NUPTK',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
+                  Container(
+                    decoration: isWizard
+                        ? BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFFFFD700,
+                                ).withValues(alpha: 0.1),
+                                blurRadius: 10,
+                              ),
+                            ],
+                          )
+                        : null,
+                    child: Card(
+                      color: isWizard ? Colors.transparent : Colors.grey[200],
+                      elevation: isWizard ? 0 : 1,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: isWizard ? BorderSide.none : BorderSide.none,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              user.role == UserRole.student ? 'NISN' : 'NUPTK',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isWizard
+                                    ? Colors.white54
+                                    : Colors.grey[600],
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            user.identifier,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                            const SizedBox(height: 4),
+                            Text(
+                              user.identifier,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: isWizard ? Colors.white : Colors.black,
+                                fontFamily: isWizard ? 'Cinzel' : null,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'This identifier cannot be changed',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                              fontStyle: FontStyle.italic,
+                            const SizedBox(height: 8),
+                            Text(
+                              'This identifier cannot be changed',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isWizard
+                                    ? Colors.white38
+                                    : Colors.grey[600],
+                                fontStyle: FontStyle.italic,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -199,10 +185,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   // Editable fields
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(
+                    style: TextStyle(
+                      color: isWizard ? Colors.white : Colors.black,
+                    ),
+                    decoration: InputDecoration(
                       labelText: 'Full Name',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.person),
+                      labelStyle: TextStyle(
+                        color: isWizard ? Colors.white70 : null,
+                      ),
+                      border: const OutlineInputBorder(),
+                      enabledBorder: isWizard
+                          ? const OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white24),
+                            )
+                          : null,
+                      prefixIcon: Icon(
+                        Icons.person,
+                        color: isWizard ? const Color(0xFFFFD700) : null,
+                      ),
+                      filled: isWizard,
+                      fillColor: isWizard
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : null,
                     ),
                     textCapitalization: TextCapitalization.words,
                     validator: (value) {
@@ -216,10 +220,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   InkWell(
                     onTap: () => _selectDate(context),
                     child: InputDecorator(
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Date of Birth',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.calendar_today),
+                        labelStyle: TextStyle(
+                          color: isWizard ? Colors.white70 : null,
+                        ),
+                        border: const OutlineInputBorder(),
+                        enabledBorder: isWizard
+                            ? const OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white24),
+                              )
+                            : null,
+                        prefixIcon: Icon(
+                          Icons.calendar_today,
+                          color: isWizard ? const Color(0xFFFFD700) : null,
+                        ),
+                        filled: isWizard,
+                        fillColor: isWizard
+                            ? Colors.white.withValues(alpha: 0.1)
+                            : null,
                       ),
                       child: Text(
                         _selectedDate == null
@@ -227,8 +246,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             : DateFormat('dd MMMM yyyy').format(_selectedDate!),
                         style: TextStyle(
                           color: _selectedDate == null
-                              ? Colors.grey
-                              : Colors.black,
+                              ? (isWizard ? Colors.white38 : Colors.grey)
+                              : (isWizard ? Colors.white : Colors.black),
                         ),
                       ),
                     ),
@@ -238,16 +257,36 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     onPressed: _isLoading ? null : _saveProfile,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: isWizard
+                          ? const Color(0xFF4A148C)
+                          : null, // Deep Purple for Wizard
+                      foregroundColor: isWizard
+                          ? const Color(0xFFFFD700)
+                          : null, // Gold text
+                      side: isWizard
+                          ? const BorderSide(color: Color(0xFFFFD700))
+                          : null,
                     ),
                     child: _isLoading
-                        ? const SizedBox(
+                        ? SizedBox(
                             height: 20,
                             width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                isWizard
+                                    ? const Color(0xFFFFD700)
+                                    : Colors.white,
+                              ),
+                            ),
                           )
-                        : const Text(
+                        : Text(
                             'Save Changes',
-                            style: TextStyle(fontSize: 18),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontFamily: isWizard ? 'Cinzel' : null,
+                              fontWeight: isWizard ? FontWeight.bold : null,
+                            ),
                           ),
                   ),
                 ],
@@ -255,7 +294,63 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
           );
         },
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: isWizard ? Colors.transparent : Colors.white,
+      appBar: AppBar(
+        backgroundColor: isWizard ? Colors.transparent : Colors.white,
+        elevation: 0,
+        iconTheme: IconThemeData(color: isWizard ? Colors.white : Colors.black),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: isWizard ? const Color(0xFF4A148C) : Colors.red[700],
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(8),
+                  bottomLeft: Radius.circular(8),
+                ),
+                border: isWizard
+                    ? Border.all(color: const Color(0xFFFFD700))
+                    : null,
+              ),
+              child: Text(
+                'Sikolah',
+                style: TextStyle(
+                  color: isWizard ? const Color(0xFFFFD700) : Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  fontFamily: isWizard ? 'Cinzel' : null,
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: isWizard ? const Color(0xFFFFD700) : Colors.green[700],
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(8),
+                  bottomRight: Radius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Apps',
+                style: TextStyle(
+                  color: isWizard ? const Color(0xFF4A148C) : Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  fontFamily: isWizard ? 'Cinzel' : null,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
+      body: isWizard ? WizardBackground(child: buildContent()) : buildContent(),
     );
   }
 }

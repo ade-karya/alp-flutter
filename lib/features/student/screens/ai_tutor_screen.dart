@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_themes.dart';
+import '../../../core/theme/theme_cubit.dart';
+import '../../../core/theme/wizard_background.dart';
 import '../../../core/services/gemini_openai_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/settings/settings_cubit.dart';
@@ -89,30 +92,58 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isWizard = context.watch<ThemeCubit>().state == AppThemeMode.wizard;
+
+    Widget buildContent() {
+      return Column(
+        children: [
+          Expanded(
+            child: _messages.isEmpty
+                ? _buildWelcomeScreen(l10n, isWizard)
+                : _buildChatList(l10n, isWizard),
+          ),
+          if (_isLoading) _buildLoadingIndicator(isWizard),
+          _buildInputArea(l10n, isWizard),
+        ],
+      );
+    }
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: isWizard ? Colors.transparent : Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isWizard ? Colors.transparent : Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(
+          color: isWizard ? Colors.white : Colors.black87,
+        ),
         title: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.blue[400]!, Colors.blue[700]!],
+                  colors: isWizard
+                      ? [const Color(0xFF4A148C), const Color(0xFF7B1FA2)]
+                      : [Colors.blue[400]!, Colors.blue[700]!],
                 ),
                 borderRadius: BorderRadius.circular(10),
+                border: isWizard
+                    ? Border.all(color: const Color(0xFFFFD700))
+                    : null,
               ),
-              child: const Icon(Icons.smart_toy, color: Colors.white, size: 20),
+              child: Icon(
+                Icons.smart_toy,
+                color: isWizard ? const Color(0xFFFFD700) : Colors.white,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
             Text(
               l10n.aiTutorTitle,
-              style: const TextStyle(
-                color: Colors.black87,
+              style: TextStyle(
+                color: isWizard ? Colors.white : Colors.black87,
                 fontWeight: FontWeight.bold,
+                fontFamily: isWizard ? 'Cinzel' : null,
               ),
             ),
           ],
@@ -120,7 +151,10 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
         actions: [
           if (_messages.isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.refresh),
+              icon: Icon(
+                Icons.refresh,
+                color: isWizard ? const Color(0xFFFFD700) : null,
+              ),
               tooltip: 'Mulai percakapan baru',
               onPressed: () {
                 setState(() {
@@ -130,21 +164,11 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
             ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: _messages.isEmpty
-                ? _buildWelcomeScreen(l10n)
-                : _buildChatList(l10n),
-          ),
-          if (_isLoading) _buildLoadingIndicator(),
-          _buildInputArea(l10n),
-        ],
-      ),
+      body: isWizard ? WizardBackground(child: buildContent()) : buildContent(),
     );
   }
 
-  Widget _buildWelcomeScreen(AppLocalizations l10n) {
+  Widget _buildWelcomeScreen(AppLocalizations l10n, bool isWizard) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -155,38 +179,67 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.blue[300]!, Colors.blue[600]!],
+                colors: isWizard
+                    ? [const Color(0xFF4A148C), const Color(0xFF7B1FA2)]
+                    : [Colors.blue[300]!, Colors.blue[600]!],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blue.withAlpha(100),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+              border: isWizard
+                  ? Border.all(color: const Color(0xFFFFD700), width: 2)
+                  : null,
+              boxShadow: isWizard
+                  ? [
+                      BoxShadow(
+                        color: const Color(0xFFFFD700).withValues(alpha: 0.3),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ]
+                  : [
+                      BoxShadow(
+                        color: Colors.blue.withAlpha(100),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
             ),
-            child: const Icon(Icons.smart_toy, color: Colors.white, size: 64),
+            child: Icon(
+              Icons.smart_toy,
+              color: isWizard ? const Color(0xFFFFD700) : Colors.white,
+              size: 64,
+            ),
           ),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'Halo! Saya AI Tutor 👋',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: isWizard ? Colors.white : Colors.black87,
+              fontFamily: isWizard ? 'Cinzel' : null,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Tanyakan apa saja tentang pelajaranmu',
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            style: TextStyle(
+              fontSize: 16,
+              color: isWizard ? Colors.white70 : Colors.grey[600],
+            ),
           ),
           const SizedBox(height: 40),
           // Quick prompts
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Text(
               'Coba tanyakan:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: isWizard ? Colors.white : Colors.black87,
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -194,7 +247,7 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Material(
-                color: Colors.white,
+                color: isWizard ? Colors.transparent : Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 child: InkWell(
                   onTap: () => _sendMessage(_quickPrompts[index]),
@@ -203,20 +256,29 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
+                      color: isWizard
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : null,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey.shade200),
+                      border: isWizard
+                          ? Border.all(color: Colors.white24)
+                          : Border.all(color: Colors.grey.shade200),
                     ),
                     child: Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.blue.withAlpha(25),
+                            color: isWizard
+                                ? Colors.white.withValues(alpha: 0.1)
+                                : Colors.blue.withAlpha(25),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.lightbulb_outline,
-                            color: Colors.blue,
+                            color: isWizard
+                                ? const Color(0xFFFFD700)
+                                : Colors.blue,
                             size: 20,
                           ),
                         ),
@@ -224,13 +286,16 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                         Expanded(
                           child: Text(
                             _quickPrompts[index],
-                            style: const TextStyle(fontSize: 14),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: isWizard ? Colors.white : Colors.black87,
+                            ),
                           ),
                         ),
                         Icon(
                           Icons.arrow_forward_ios,
                           size: 16,
-                          color: Colors.grey[400],
+                          color: isWizard ? Colors.white54 : Colors.grey[400],
                         ),
                       ],
                     ),
@@ -244,7 +309,7 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
     );
   }
 
-  Widget _buildChatList(AppLocalizations l10n) {
+  Widget _buildChatList(AppLocalizations l10n, bool isWizard) {
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(16.0),
@@ -269,13 +334,20 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                     gradient: LinearGradient(
                       colors: isError
                           ? [Colors.red[300]!, Colors.red[600]!]
+                          : isWizard
+                          ? [const Color(0xFF4A148C), const Color(0xFF7B1FA2)]
                           : [Colors.blue[300]!, Colors.blue[600]!],
                     ),
                     borderRadius: BorderRadius.circular(10),
+                    border: isWizard && !isError
+                        ? Border.all(color: const Color(0xFFFFD700))
+                        : null,
                   ),
                   child: Icon(
                     isError ? Icons.error_outline : Icons.smart_toy,
-                    color: Colors.white,
+                    color: isWizard && !isError
+                        ? const Color(0xFFFFD700)
+                        : Colors.white,
                     size: 20,
                   ),
                 ),
@@ -286,10 +358,12 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: isUser
-                        ? Colors.blue
+                        ? (isWizard ? const Color(0xFF4A148C) : Colors.blue)
                         : isError
                         ? Colors.red.withAlpha(25)
-                        : Colors.white,
+                        : (isWizard
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : Colors.white),
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(20),
                       topRight: const Radius.circular(20),
@@ -299,7 +373,9 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                     boxShadow: [
                       if (!isUser)
                         BoxShadow(
-                          color: Colors.grey.withAlpha(25),
+                          color: isWizard
+                              ? Colors.black26
+                              : Colors.grey.withAlpha(25),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -307,18 +383,23 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                     border: isError
                         ? Border.all(color: Colors.red.withAlpha(50))
                         : isUser
-                        ? null
-                        : Border.all(color: Colors.grey.shade200),
+                        ? (isWizard
+                              ? Border.all(color: const Color(0xFFFFD700))
+                              : null)
+                        : (isWizard
+                              ? Border.all(color: Colors.white24)
+                              : Border.all(color: Colors.grey.shade200)),
                   ),
                   child: Text(
                     message['content']!,
                     style: TextStyle(
                       color: isUser
-                          ? Colors.white
+                          ? (isWizard ? const Color(0xFFFFD700) : Colors.white)
                           : isError
                           ? Colors.red
-                          : Colors.black87,
+                          : (isWizard ? Colors.white : Colors.black87),
                       height: 1.5,
+                      fontFamily: isWizard && !isError ? 'Lato' : null,
                     ),
                   ),
                 ),
@@ -328,10 +409,16 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: isWizard
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.grey[200],
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.person, color: Colors.grey[600], size: 20),
+                  child: Icon(
+                    Icons.person,
+                    color: isWizard ? Colors.white : Colors.grey[600],
+                    size: 20,
+                  ),
                 ),
               ],
             ],
@@ -341,7 +428,7 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
     );
   }
 
-  Widget _buildLoadingIndicator() {
+  Widget _buildLoadingIndicator(bool isWizard) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -350,28 +437,41 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.blue[300]!, Colors.blue[600]!],
+                colors: isWizard
+                    ? [const Color(0xFF4A148C), const Color(0xFF7B1FA2)]
+                    : [Colors.blue[300]!, Colors.blue[600]!],
               ),
               borderRadius: BorderRadius.circular(10),
+              border: isWizard
+                  ? Border.all(color: const Color(0xFFFFD700))
+                  : null,
             ),
-            child: const Icon(Icons.smart_toy, color: Colors.white, size: 20),
+            child: Icon(
+              Icons.smart_toy,
+              color: isWizard ? const Color(0xFFFFD700) : Colors.white,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isWizard
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.white,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.grey.shade200),
+              border: isWizard
+                  ? Border.all(color: Colors.white24)
+                  : Border.all(color: Colors.grey.shade200),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildTypingDot(0),
+                _buildTypingDot(0, isWizard),
                 const SizedBox(width: 4),
-                _buildTypingDot(1),
+                _buildTypingDot(1, isWizard),
                 const SizedBox(width: 4),
-                _buildTypingDot(2),
+                _buildTypingDot(2, isWizard),
               ],
             ),
           ),
@@ -380,7 +480,7 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
     );
   }
 
-  Widget _buildTypingDot(int index) {
+  Widget _buildTypingDot(int index, bool isWizard) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: Duration(milliseconds: 300 + (index * 100)),
@@ -389,7 +489,9 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
           width: 8,
           height: 8,
           decoration: BoxDecoration(
-            color: Colors.blue.withAlpha((value * 255).toInt()),
+            color: (isWizard ? const Color(0xFFFFD700) : Colors.blue).withAlpha(
+              (value * 255).toInt(),
+            ),
             shape: BoxShape.circle,
           ),
         );
@@ -397,14 +499,14 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
     );
   }
 
-  Widget _buildInputArea(AppLocalizations l10n) {
+  Widget _buildInputArea(AppLocalizations l10n, bool isWizard) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isWizard ? Colors.black26 : Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha(25),
+            color: isWizard ? Colors.black12 : Colors.grey.withAlpha(25),
             blurRadius: 10,
             offset: const Offset(0, -4),
           ),
@@ -416,14 +518,22 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: isWizard
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.grey[100],
                   borderRadius: BorderRadius.circular(24),
+                  border: isWizard ? Border.all(color: Colors.white24) : null,
                 ),
                 child: TextField(
                   controller: _controller,
+                  style: TextStyle(
+                    color: isWizard ? Colors.white : Colors.black87,
+                  ),
                   decoration: InputDecoration(
                     hintText: l10n.aiTutorHint,
-                    hintStyle: TextStyle(color: Colors.grey[500]),
+                    hintStyle: TextStyle(
+                      color: isWizard ? Colors.white54 : Colors.grey[500],
+                    ),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 20,
@@ -440,19 +550,29 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.blue[400]!, Colors.blue[700]!],
+                  colors: isWizard
+                      ? [const Color(0xFF4A148C), const Color(0xFF7B1FA2)]
+                      : [Colors.blue[400]!, Colors.blue[700]!],
                 ),
                 borderRadius: BorderRadius.circular(16),
+                border: isWizard
+                    ? Border.all(color: const Color(0xFFFFD700))
+                    : null,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.blue.withAlpha(100),
+                    color: isWizard
+                        ? const Color(0xFFFFD700).withValues(alpha: 0.3)
+                        : Colors.blue.withAlpha(100),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
               ),
               child: IconButton(
-                icon: const Icon(Icons.send, color: Colors.white),
+                icon: Icon(
+                  Icons.send,
+                  color: isWizard ? const Color(0xFFFFD700) : Colors.white,
+                ),
                 onPressed: () => _sendMessage(),
               ),
             ),

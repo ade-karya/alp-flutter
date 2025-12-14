@@ -40,9 +40,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isPlayful = context.select(
-      (ThemeCubit cubit) => cubit.state == AppThemeMode.playful,
-    );
+    final themeMode = context.select((ThemeCubit cubit) => cubit.state);
+    final isPlayful = themeMode == AppThemeMode.playful;
+    final isWizard = themeMode == AppThemeMode.wizard;
     final l10n = AppLocalizations.of(context)!;
     final isDesktop = _isDesktop(context);
 
@@ -53,15 +53,15 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             : 'Siswa';
 
         return Scaffold(
-          backgroundColor: Colors.white,
-          appBar: _buildCustomAppBar(context, isPlayful, isDesktop),
+          backgroundColor: isWizard ? Colors.transparent : Colors.white,
+          appBar: _buildCustomAppBar(context, isPlayful, isWizard, isDesktop),
           drawer: isDesktop ? null : const AppDrawer(),
           body: Row(
             children: [
               // Permanent navigation rail for desktop
-              if (isDesktop) _buildNavigationRail(context, l10n),
+              if (isDesktop) _buildNavigationRail(context, l10n, isWizard),
 
-              // Main content
+              // Main Content
               Expanded(
                 child: Center(
                   child: ConstrainedBox(
@@ -74,8 +74,18 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                         vertical: isDesktop ? 24 : 0,
                       ),
                       child: isDesktop
-                          ? _buildDesktopLayout(context, userName, l10n)
-                          : _buildMobileLayout(context, userName, l10n),
+                          ? _buildDesktopLayout(
+                              context,
+                              userName,
+                              l10n,
+                              isWizard,
+                            )
+                          : _buildMobileLayout(
+                              context,
+                              userName,
+                              l10n,
+                              isWizard,
+                            ),
                     ),
                   ),
                 ),
@@ -88,12 +98,22 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   }
 
   // Navigation Rail for desktop
-  Widget _buildNavigationRail(BuildContext context, AppLocalizations l10n) {
+  Widget _buildNavigationRail(
+    BuildContext context,
+    AppLocalizations l10n,
+    bool isWizard,
+  ) {
     return Container(
       width: 250,
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        border: Border(right: BorderSide(color: Colors.grey.shade200)),
+        color: isWizard
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.grey[50],
+        border: Border(
+          right: BorderSide(
+            color: isWizard ? Colors.white10 : Colors.grey.shade200,
+          ),
+        ),
       ),
       child: Column(
         children: [
@@ -149,7 +169,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          const Divider(height: 1),
+          Divider(height: 1, color: isWizard ? Colors.white10 : null),
           const SizedBox(height: 10),
           // Navigation items - scrollable
           Expanded(
@@ -160,6 +180,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     context,
                     Icons.dashboard,
                     'Dashboard',
+                    isWizard: isWizard,
                     isSelected: true,
                     onTap: () {},
                   ),
@@ -167,59 +188,68 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     context,
                     Icons.school,
                     l10n.tileMyCourses,
+                    isWizard: isWizard,
                     onTap: () => context.push('/student/courses'),
                   ),
                   _buildNavItem(
                     context,
                     Icons.smart_toy,
                     l10n.tileAITutor,
+                    isWizard: isWizard,
                     onTap: () => context.push('/student/ai-tutor'),
                   ),
                   _buildNavItem(
                     context,
                     Icons.quiz,
                     'Kuis & Latihan',
+                    isWizard: isWizard,
                     onTap: () => _showComingSoon(context),
                   ),
                   _buildNavItem(
                     context,
                     Icons.assignment,
                     'Tugas',
+                    isWizard: isWizard,
                     onTap: () => _showComingSoon(context),
                   ),
                   _buildNavItem(
                     context,
                     Icons.leaderboard,
                     'Leaderboard',
+                    isWizard: isWizard,
                     onTap: () => _showComingSoon(context),
                   ),
                   _buildNavItem(
                     context,
                     Icons.emoji_events,
                     'Pencapaian',
+                    isWizard: isWizard,
                     onTap: () => _showComingSoon(context),
                   ),
                   _buildNavItem(
                     context,
                     Icons.calendar_today,
                     'Jadwal',
+                    isWizard: isWizard,
                     onTap: () => _showComingSoon(context),
                   ),
                 ],
               ),
             ),
           ),
-          const Divider(height: 1),
+          Divider(height: 1, color: isWizard ? Colors.white10 : null),
           _buildNavItem(
             context,
             Icons.settings,
             'Pengaturan',
+            isWizard: isWizard,
             onTap: () => _showComingSoon(context),
           ),
           _buildNavItem(
             context,
             Icons.logout,
             'Keluar',
+            isWizard: isWizard,
             onTap: () {
               context.read<AuthCubit>().logout();
             },
@@ -235,6 +265,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     IconData icon,
     String label, {
     bool isSelected = false,
+    required bool isWizard,
     required VoidCallback onTap,
   }) {
     return Material(
@@ -244,10 +275,16 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.blue.withAlpha(25) : null,
+            color: isSelected
+                ? (isWizard
+                      ? Colors.amber.withValues(alpha: 0.1)
+                      : Colors.blue.withAlpha(25))
+                : null,
             border: Border(
               left: BorderSide(
-                color: isSelected ? Colors.blue : Colors.transparent,
+                color: isSelected
+                    ? (isWizard ? const Color(0xFFFFD700) : Colors.blue)
+                    : Colors.transparent,
                 width: 3,
               ),
             ),
@@ -257,7 +294,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               Icon(
                 icon,
                 size: 22,
-                color: isSelected ? Colors.blue : Colors.grey[700],
+                color: isSelected
+                    ? (isWizard ? const Color(0xFFFFD700) : Colors.blue)
+                    : (isWizard ? Colors.white70 : Colors.grey[700]),
               ),
               const SizedBox(width: 14),
               Text(
@@ -265,7 +304,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  color: isSelected ? Colors.blue : Colors.grey[800],
+                  color: isSelected
+                      ? (isWizard ? const Color(0xFFFFD700) : Colors.blue)
+                      : (isWizard ? Colors.white70 : Colors.grey[800]),
                 ),
               ),
             ],
@@ -280,21 +321,33 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     BuildContext context,
     String userName,
     AppLocalizations l10n,
+    bool isWizard,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHeader(context, userName, isDesktop: true),
+        _buildHeader(context, userName, isDesktop: true, isWizard: isWizard),
         const SizedBox(height: 24),
         // Top row: Info cards and Banners
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(flex: 2, child: _buildInfoCard(context, isDesktop: true)),
+            Expanded(
+              flex: 2,
+              child: _buildInfoCard(
+                context,
+                isDesktop: true,
+                isWizard: isWizard,
+              ),
+            ),
             const SizedBox(width: 24),
             Expanded(
               flex: 3,
-              child: _buildBannerSection(context, isDesktop: true),
+              child: _buildBannerSection(
+                context,
+                isDesktop: true,
+                isWizard: isWizard,
+              ),
             ),
           ],
         ),
@@ -305,16 +358,29 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           children: [
             Expanded(
               flex: 3,
-              child: _buildServiceGrid(context, l10n, isDesktop: true),
+              child: _buildServiceGrid(
+                context,
+                l10n,
+                isDesktop: true,
+                isWizard: isWizard,
+              ),
             ),
             const SizedBox(width: 24),
             Expanded(
               flex: 2,
               child: Column(
                 children: [
-                  _buildLearningProgressSection(context, isDesktop: true),
+                  _buildLearningProgressSection(
+                    context,
+                    isDesktop: true,
+                    isWizard: isWizard,
+                  ),
                   const SizedBox(height: 20),
-                  _buildQuickActionsSection(context, isDesktop: true),
+                  _buildQuickActionsSection(
+                    context,
+                    isDesktop: true,
+                    isWizard: isWizard,
+                  ),
                 ],
               ),
             ),
@@ -330,21 +396,30 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     BuildContext context,
     String userName,
     AppLocalizations l10n,
+    bool isWizard,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildHeader(context, userName, isDesktop: false),
+        _buildHeader(context, userName, isDesktop: false, isWizard: isWizard),
         const SizedBox(height: 20),
-        _buildInfoCard(context, isDesktop: false),
+        _buildInfoCard(context, isDesktop: false, isWizard: isWizard),
         const SizedBox(height: 20),
-        _buildBannerSection(context, isDesktop: false),
+        _buildBannerSection(context, isDesktop: false, isWizard: isWizard),
         const SizedBox(height: 10),
-        _buildServiceGrid(context, l10n, isDesktop: false),
+        _buildServiceGrid(context, l10n, isDesktop: false, isWizard: isWizard),
         const SizedBox(height: 20),
-        _buildLearningProgressSection(context, isDesktop: false),
+        _buildLearningProgressSection(
+          context,
+          isDesktop: false,
+          isWizard: isWizard,
+        ),
         const SizedBox(height: 20),
-        _buildQuickActionsSection(context, isDesktop: false),
+        _buildQuickActionsSection(
+          context,
+          isDesktop: false,
+          isWizard: isWizard,
+        ),
         const SizedBox(height: 40),
       ],
     );
@@ -353,13 +428,16 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   PreferredSizeWidget _buildCustomAppBar(
     BuildContext context,
     bool isPlayful,
+    bool isWizard,
     bool isDesktop,
   ) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: isWizard ? Colors.transparent : Colors.white,
       elevation: 0,
       automaticallyImplyLeading: !isDesktop,
-      iconTheme: const IconThemeData(color: Colors.black),
+      iconTheme: IconThemeData(
+        color: isWizard ? const Color(0xFFFFD700) : Colors.black,
+      ),
       title: isDesktop
           ? null
           : Row(
@@ -417,14 +495,24 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             height: 40,
             margin: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: isWizard
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.grey[100],
               borderRadius: BorderRadius.circular(20),
+              border: isWizard ? Border.all(color: Colors.white24) : null,
             ),
             child: TextField(
+              style: TextStyle(color: isWizard ? Colors.white : Colors.black),
               decoration: InputDecoration(
                 hintText: 'Cari materi, kuis, tugas...',
-                hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
-                prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
+                hintStyle: TextStyle(
+                  color: isWizard ? Colors.white54 : Colors.grey[500],
+                  fontSize: 14,
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: isWizard ? Colors.white54 : Colors.grey[500],
+                ),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 10),
               ),
@@ -442,6 +530,17 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           tooltip: 'Notifikasi',
           onPressed: () => _showComingSoon(context),
         ),
+        IconButton(
+          icon: Icon(
+            isWizard
+                ? Icons.auto_awesome
+                : (isPlayful ? Icons.pets : Icons.work),
+          ),
+          tooltip: 'Tema',
+          onPressed: () {
+            context.read<ThemeCubit>().toggleTheme();
+          },
+        ),
         if (isDesktop) const SizedBox(width: 16),
       ],
     );
@@ -451,6 +550,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     BuildContext context,
     String userName, {
     required bool isDesktop,
+    required bool isWizard,
   }) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : 16.0),
@@ -463,7 +563,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             style: TextStyle(
               fontSize: isDesktop ? 28 : 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: isWizard ? const Color(0xFFFFD700) : Colors.black87,
+              fontFamily: isWizard ? 'Cinzel' : null,
             ),
           ),
           const SizedBox(height: 4),
@@ -471,7 +572,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             'Ayo lanjutkan belajarmu hari ini!',
             style: TextStyle(
               fontSize: isDesktop ? 16 : 14,
-              color: Colors.grey[600],
+              color: isWizard ? Colors.white70 : Colors.grey[600],
             ),
           ),
         ],
@@ -479,31 +580,45 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     );
   }
 
-  Widget _buildInfoCard(BuildContext context, {required bool isDesktop}) {
+  Widget _buildInfoCard(
+    BuildContext context, {
+    required bool isDesktop,
+    required bool isWizard,
+  }) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : 16.0),
       child: Container(
         padding: EdgeInsets.all(isDesktop ? 24 : 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isWizard ? Colors.black.withValues(alpha: 0.4) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withAlpha(25),
+              color: isWizard
+                  ? Colors.purple.withValues(alpha: 0.1)
+                  : Colors.grey.withAlpha(25),
               spreadRadius: 2,
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
-          border: Border.all(color: Colors.grey.shade100),
+          border: isWizard
+              ? Border.all(
+                  color: const Color(0xFFFFD700).withValues(alpha: 0.3),
+                )
+              : Border.all(color: Colors.grey.shade100),
         ),
         child: isDesktop
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Progres Belajarmu',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isWizard ? Colors.white : Colors.black,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Row(
@@ -515,6 +630,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                         '12',
                         Icons.check_circle,
                         Colors.green,
+                        isWizard: isWizard,
                       ),
                       _buildInfoItemDesktop(
                         context,
@@ -522,6 +638,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                         '850',
                         Icons.stars,
                         Colors.orange,
+                        isWizard: isWizard,
                       ),
                       _buildInfoItemDesktop(
                         context,
@@ -529,6 +646,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                         '7 hari',
                         Icons.local_fire_department,
                         Colors.red,
+                        isWizard: isWizard,
                       ),
                     ],
                   ),
@@ -543,6 +661,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     '12',
                     Icons.check_circle,
                     Colors.green,
+                    isWizard: isWizard,
                   ),
                   _buildInfoItem(
                     context,
@@ -550,6 +669,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     '850',
                     Icons.stars,
                     Colors.orange,
+                    isWizard: isWizard,
                   ),
                   _buildInfoItem(
                     context,
@@ -557,6 +677,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     '7 hari',
                     Icons.local_fire_department,
                     Colors.red,
+                    isWizard: isWizard,
                   ),
                 ],
               ),
@@ -569,12 +690,19 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     String label,
     String value,
     IconData icon,
-    Color color,
-  ) {
+    Color color, {
+    required bool isWizard,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: isWizard ? Colors.white70 : Colors.grey,
+          ),
+        ),
         const SizedBox(height: 4),
         Row(
           children: [
@@ -582,7 +710,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             const SizedBox(width: 4),
             Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: isWizard ? Colors.white : Colors.black,
+              ),
             ),
           ],
         ),
@@ -595,8 +727,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     String label,
     String value,
     IconData icon,
-    Color color,
-  ) {
+    Color color, {
+    required bool isWizard,
+  }) {
     return Column(
       children: [
         Container(
@@ -604,21 +737,38 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           decoration: BoxDecoration(
             color: color.withAlpha(25),
             borderRadius: BorderRadius.circular(16),
+            border: isWizard
+                ? Border.all(color: color.withValues(alpha: 0.3))
+                : null,
           ),
           child: Icon(icon, size: 32, color: color),
         ),
         const SizedBox(height: 12),
         Text(
           value,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 28),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 28,
+            color: isWizard ? const Color(0xFFFFD700) : Colors.black,
+          ),
         ),
         const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            color: isWizard ? Colors.white70 : Colors.grey,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildBannerSection(BuildContext context, {required bool isDesktop}) {
+  Widget _buildBannerSection(
+    BuildContext context, {
+    required bool isDesktop,
+    required bool isWizard,
+  }) {
     final bannerData = [
       {
         'colors': [Colors.blue[300]!, Colors.blue[600]!],
@@ -644,9 +794,13 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Aktivitas Terkini',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: isWizard ? Colors.white : Colors.black,
+            ),
           ),
           const SizedBox(height: 16),
           SizedBox(
@@ -665,6 +819,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
+                      border: isWizard
+                          ? Border.all(color: Colors.white24)
+                          : null,
                     ),
                     child: Stack(
                       children: [
@@ -751,6 +908,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
+              border: isWizard ? Border.all(color: Colors.white24) : null,
             ),
             child: Stack(
               children: [
@@ -819,6 +977,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     BuildContext context,
     AppLocalizations l10n, {
     required bool isDesktop,
+    required bool isWizard,
   }) {
     final services = [
       {
@@ -885,17 +1044,23 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         padding: isDesktop ? const EdgeInsets.all(24) : EdgeInsets.zero,
         decoration: isDesktop
             ? BoxDecoration(
-                color: Colors.white,
+                color: isWizard
+                    ? Colors.black.withValues(alpha: 0.4)
+                    : Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withAlpha(25),
+                    color: isWizard
+                        ? Colors.purple.withValues(alpha: 0.1)
+                        : Colors.grey.withAlpha(25),
                     spreadRadius: 2,
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
-                border: Border.all(color: Colors.grey.shade100),
+                border: isWizard
+                    ? Border.all(color: Colors.white24)
+                    : Border.all(color: Colors.grey.shade100),
               )
             : null,
         child: Column(
@@ -906,6 +1071,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               style: TextStyle(
                 fontSize: isDesktop ? 18 : 16,
                 fontWeight: FontWeight.bold,
+                color: isWizard ? Colors.white : Colors.black,
               ),
             ),
             const SizedBox(height: 16),
@@ -928,6 +1094,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                   service['color'] as Color,
                   service['route'] as String?,
                   isDesktop: isDesktop,
+                  isWizard: isWizard,
                 );
               },
             ),
@@ -944,6 +1111,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     Color color,
     String? route, {
     required bool isDesktop,
+    required bool isWizard,
   }) {
     return Material(
       color: Colors.transparent,
@@ -962,9 +1130,13 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               : const EdgeInsets.all(4),
           decoration: isDesktop
               ? BoxDecoration(
-                  color: color.withAlpha(15),
+                  color: isWizard
+                      ? color.withValues(alpha: 0.1)
+                      : color.withAlpha(15),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: color.withAlpha(30)),
+                  border: isWizard
+                      ? Border.all(color: color.withValues(alpha: 0.3))
+                      : Border.all(color: color.withAlpha(30)),
                 )
               : null,
           child: Column(
@@ -974,10 +1146,28 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               Container(
                 padding: EdgeInsets.all(isDesktop ? 14 : 10),
                 decoration: BoxDecoration(
-                  color: isDesktop ? color.withAlpha(40) : color.withAlpha(25),
+                  color: isWizard
+                      ? color.withValues(alpha: 0.2)
+                      : (isDesktop ? color.withAlpha(40) : color.withAlpha(25)),
                   borderRadius: BorderRadius.circular(14),
+                  border: isWizard
+                      ? Border.all(color: color.withValues(alpha: 0.3))
+                      : null,
+                  boxShadow: isWizard
+                      ? [
+                          BoxShadow(
+                            color: color.withValues(alpha: 0.2),
+                            blurRadius: 8,
+                            spreadRadius: 0,
+                          ),
+                        ]
+                      : null,
                 ),
-                child: Icon(icon, color: color, size: isDesktop ? 32 : 26),
+                child: Icon(
+                  icon,
+                  color: isWizard ? color.withValues(alpha: 0.9) : color,
+                  size: isDesktop ? 32 : 26,
+                ),
               ),
               SizedBox(height: isDesktop ? 8 : 6),
               Flexible(
@@ -989,7 +1179,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                   style: TextStyle(
                     fontSize: isDesktop ? 12 : 10,
                     fontWeight: isDesktop ? FontWeight.w500 : FontWeight.normal,
-                    color: Colors.black87,
+                    color: isWizard ? Colors.white70 : Colors.black87,
                   ),
                 ),
               ),
@@ -1003,15 +1193,29 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   Widget _buildLearningProgressSection(
     BuildContext context, {
     required bool isDesktop,
+    required bool isWizard,
   }) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : 16),
       child: Container(
         padding: EdgeInsets.all(isDesktop ? 20 : 16),
         decoration: BoxDecoration(
-          color: Colors.green.withAlpha(25),
+          color: isWizard
+              ? Colors.green.withValues(alpha: 0.1)
+              : Colors.green.withAlpha(25),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.green.withAlpha(50)),
+          border: isWizard
+              ? Border.all(color: Colors.green.withValues(alpha: 0.3))
+              : Border.all(color: Colors.green.withAlpha(50)),
+          boxShadow: isWizard
+              ? [
+                  BoxShadow(
+                    color: Colors.green.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ]
+              : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1020,7 +1224,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               children: [
                 Icon(
                   Icons.trending_up,
-                  color: Colors.green,
+                  color: isWizard ? Colors.greenAccent : Colors.green,
                   size: isDesktop ? 32 : 28,
                 ),
                 SizedBox(width: isDesktop ? 16 : 12),
@@ -1033,13 +1237,14 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: isDesktop ? 16 : 14,
+                          color: isWizard ? Colors.white : Colors.black,
                         ),
                       ),
                       Text(
                         'Kamu sudah belajar 5 jam minggu ini',
                         style: TextStyle(
                           fontSize: isDesktop ? 13 : 11,
-                          color: Colors.grey[600],
+                          color: isWizard ? Colors.white70 : Colors.grey[600],
                         ),
                       ),
                     ],
@@ -1054,8 +1259,12 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               child: LinearProgressIndicator(
                 value: 0.65,
                 minHeight: 10,
-                backgroundColor: Colors.green.withAlpha(30),
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+                backgroundColor: isWizard
+                    ? Colors.green.withValues(alpha: 0.2)
+                    : Colors.green.withAlpha(30),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  isWizard ? Colors.greenAccent : Colors.green,
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -1063,7 +1272,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               '65% dari target mingguan (8 jam)',
               style: TextStyle(
                 fontSize: isDesktop ? 12 : 10,
-                color: Colors.grey[600],
+                color: isWizard ? Colors.white60 : Colors.grey[600],
               ),
             ),
           ],
@@ -1075,6 +1284,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   Widget _buildQuickActionsSection(
     BuildContext context, {
     required bool isDesktop,
+    required bool isWizard,
   }) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : 16),
@@ -1086,6 +1296,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             style: TextStyle(
               fontSize: isDesktop ? 18 : 16,
               fontWeight: FontWeight.bold,
+              color: isWizard ? Colors.white : Colors.black,
             ),
           ),
           const SizedBox(height: 12),
@@ -1096,6 +1307,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             Colors.blue,
             Icons.play_circle_filled,
             isDesktop: isDesktop,
+            isWizard: isWizard,
           ),
           const SizedBox(height: 12),
           _buildActionCard(
@@ -1105,6 +1317,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             Colors.orange,
             Icons.quiz,
             isDesktop: isDesktop,
+            isWizard: isWizard,
           ),
         ],
       ),
@@ -1118,6 +1331,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     Color color,
     IconData icon, {
     required bool isDesktop,
+    required bool isWizard,
   }) {
     return Material(
       color: Colors.transparent,
@@ -1127,29 +1341,40 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         child: Container(
           height: isDesktop ? 90 : 100,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isWizard
+                ? Colors.black.withValues(alpha: 0.4)
+                : Colors.white,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withAlpha(30),
+                color: isWizard
+                    ? color.withValues(alpha: 0.1)
+                    : Colors.grey.withAlpha(30),
                 spreadRadius: 1,
                 blurRadius: 5,
                 offset: const Offset(0, 2),
               ),
             ],
+            border: isWizard ? Border.all(color: Colors.white24) : null,
           ),
           child: Row(
             children: [
               Container(
                 width: isDesktop ? 80 : 100,
                 decoration: BoxDecoration(
-                  color: color.withAlpha(50),
+                  color: isWizard
+                      ? color.withValues(alpha: 0.2)
+                      : color.withAlpha(50),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(12),
                     bottomLeft: Radius.circular(12),
                   ),
                 ),
-                child: Icon(icon, color: color, size: isDesktop ? 32 : 40),
+                child: Icon(
+                  icon,
+                  color: isWizard ? color.withValues(alpha: 0.9) : color,
+                  size: isDesktop ? 32 : 40,
+                ),
               ),
               Expanded(
                 child: Padding(
@@ -1163,14 +1388,15 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: isDesktop ? 15 : 14,
+                          color: isWizard ? Colors.white : Colors.black,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey,
+                          color: isWizard ? Colors.white70 : Colors.grey,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1179,7 +1405,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       Text(
                         'Mulai Sekarang',
                         style: TextStyle(
-                          color: color,
+                          color: isWizard ? color.withAlpha(255) : color,
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),

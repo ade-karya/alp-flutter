@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:alp/l10n/arb/app_localizations.dart';
 import '../../../core/auth/auth_cubit.dart';
+import '../../../core/theme/app_themes.dart';
+import '../../../core/theme/theme_cubit.dart';
+import '../../../core/theme/wizard_background.dart';
 
 class ChangePinScreen extends StatefulWidget {
   const ChangePinScreen({super.key});
@@ -74,56 +77,10 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isWizard = context.watch<ThemeCubit>().state == AppThemeMode.wizard;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.red[700],
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(8),
-                  bottomLeft: Radius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Sikolah',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.green[700],
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(8),
-                  bottomRight: Radius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Apps',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      body: SingleChildScrollView(
+    Widget buildContent() {
+      return SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Form(
           key: _formKey,
@@ -132,25 +89,45 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
             children: [
               Text(
                 l10n.navChangePin,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: isWizard ? Colors.white : Colors.black87,
+                  fontFamily: isWizard ? 'Cinzel' : null,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Amankan akunmu dengan memperbarui PIN secara berkala.',
-                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isWizard ? Colors.white70 : Colors.grey[600],
+                ),
               ),
               const SizedBox(height: 32),
 
               TextFormField(
                 controller: _currentPinController,
+                style: TextStyle(color: isWizard ? Colors.white : Colors.black),
                 decoration: InputDecoration(
                   labelText: l10n.changePinCurrentLabel,
+                  labelStyle: TextStyle(
+                    color: isWizard ? Colors.white70 : null,
+                  ),
                   border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.lock_outline),
+                  enabledBorder: isWizard
+                      ? const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white24),
+                        )
+                      : null,
+                  prefixIcon: Icon(
+                    Icons.lock_outline,
+                    color: isWizard ? const Color(0xFFFFD700) : null,
+                  ),
+                  filled: isWizard,
+                  fillColor: isWizard
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : null,
                 ),
                 keyboardType: TextInputType.number,
                 obscureText: true,
@@ -169,10 +146,26 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
               const SizedBox(height: 24),
               TextFormField(
                 controller: _newPinController,
+                style: TextStyle(color: isWizard ? Colors.white : Colors.black),
                 decoration: InputDecoration(
                   labelText: l10n.changePinNewLabel,
+                  labelStyle: TextStyle(
+                    color: isWizard ? Colors.white70 : null,
+                  ),
                   border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.vpn_key),
+                  enabledBorder: isWizard
+                      ? const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white24),
+                        )
+                      : null,
+                  prefixIcon: Icon(
+                    Icons.vpn_key,
+                    color: isWizard ? const Color(0xFFFFD700) : null,
+                  ),
+                  filled: isWizard,
+                  fillColor: isWizard
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : null,
                 ),
                 keyboardType: TextInputType.number,
                 obscureText: true,
@@ -191,10 +184,26 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _confirmPinController,
+                style: TextStyle(color: isWizard ? Colors.white : Colors.black),
                 decoration: InputDecoration(
                   labelText: l10n.changePinConfirmLabel,
+                  labelStyle: TextStyle(
+                    color: isWizard ? Colors.white70 : null,
+                  ),
                   border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.check_circle_outline),
+                  enabledBorder: isWizard
+                      ? const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white24),
+                        )
+                      : null,
+                  prefixIcon: Icon(
+                    Icons.check_circle_outline,
+                    color: isWizard ? const Color(0xFFFFD700) : null,
+                  ),
+                  filled: isWizard,
+                  fillColor: isWizard
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : null,
                 ),
                 keyboardType: TextInputType.number,
                 obscureText: true,
@@ -215,22 +224,95 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
                 onPressed: _isLoading ? null : _updatePin,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: isWizard
+                      ? const Color(0xFF4A148C)
+                      : null, // Deep Purple for Wizard
+                  foregroundColor: isWizard
+                      ? const Color(0xFFFFD700)
+                      : null, // Gold text
+                  side: isWizard
+                      ? const BorderSide(color: Color(0xFFFFD700))
+                      : null,
                 ),
                 child: _isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 20,
                         width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            isWizard ? const Color(0xFFFFD700) : Colors.white,
+                          ),
+                        ),
                       )
                     : Text(
                         l10n.buttonOK, // "Simpan" or "OK"
-                        style: const TextStyle(fontSize: 18),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontFamily: isWizard ? 'Cinzel' : null,
+                        ),
                       ),
               ),
             ],
           ),
         ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: isWizard ? Colors.transparent : Colors.white,
+      appBar: AppBar(
+        backgroundColor: isWizard ? Colors.transparent : Colors.white,
+        elevation: 0,
+        iconTheme: IconThemeData(color: isWizard ? Colors.white : Colors.black),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: isWizard ? const Color(0xFF4A148C) : Colors.red[700],
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(8),
+                  bottomLeft: Radius.circular(8),
+                ),
+                border: isWizard
+                    ? Border.all(color: const Color(0xFFFFD700))
+                    : null,
+              ),
+              child: Text(
+                'Sikolah',
+                style: TextStyle(
+                  color: isWizard ? const Color(0xFFFFD700) : Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  fontFamily: isWizard ? 'Cinzel' : null,
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: isWizard ? const Color(0xFFFFD700) : Colors.green[700],
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(8),
+                  bottomRight: Radius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Apps',
+                style: TextStyle(
+                  color: isWizard ? const Color(0xFF4A148C) : Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  fontFamily: isWizard ? 'Cinzel' : null,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
+      body: isWizard ? WizardBackground(child: buildContent()) : buildContent(),
     );
   }
 }
