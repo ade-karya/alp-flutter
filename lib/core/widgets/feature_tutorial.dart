@@ -1,6 +1,8 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../theme/theme_cubit.dart';
+import '../theme/app_themes.dart';
 
 /// Model untuk satu langkah tutorial
 class TutorialStep {
@@ -83,19 +85,23 @@ class FeatureTutorial extends StatefulWidget {
     VoidCallback? onSkip,
   }) async {
     final overlay = Overlay.of(context);
+    final themeCubit = context.read<ThemeCubit>();
     late OverlayEntry overlayEntry;
 
     overlayEntry = OverlayEntry(
-      builder: (context) => _TutorialOverlay(
-        steps: steps,
-        onComplete: () {
-          overlayEntry.remove();
-          onComplete?.call();
-        },
-        onSkip: () {
-          overlayEntry.remove();
-          onSkip?.call();
-        },
+      builder: (context) => BlocProvider.value(
+        value: themeCubit,
+        child: _TutorialOverlay(
+          steps: steps,
+          onComplete: () {
+            overlayEntry.remove();
+            onComplete?.call();
+          },
+          onSkip: () {
+            overlayEntry.remove();
+            onSkip?.call();
+          },
+        ),
       ),
     );
 
@@ -145,6 +151,12 @@ class _TutorialOverlayState extends State<_TutorialOverlay>
   static const Color _seaLight = Color(0xFF4DD0E1);
   static const Color _seaMedium = Color(0xFF00ACC1);
   static const Color _seaDeep = Color(0xFF00838F);
+
+  // Warna Wizard Theme
+  static const Color _wizardGold = Color(0xFFFFD700);
+  static const Color _wizardPurple = Color(0xFF4A148C);
+  static const Color _wizardDeepPurple = Color(0xFF2E004B);
+  static const Color _wizardLightPurple = Color(0xFF7B1FA2);
 
   @override
   void initState() {
@@ -211,85 +223,92 @@ class _TutorialOverlayState extends State<_TutorialOverlay>
 
   @override
   Widget build(BuildContext context) {
-    final step = widget.steps[_currentStep];
-    final isLastStep = _currentStep == widget.steps.length - 1;
-    final isFirstStep = _currentStep == 0;
-    final screenSize = MediaQuery.of(context).size;
+    return BlocBuilder<ThemeCubit, AppThemeMode>(
+      builder: (context, themeMode) {
+        final isWizard = themeMode == AppThemeMode.wizard;
+        final step = widget.steps[_currentStep];
+        final isLastStep = _currentStep == widget.steps.length - 1;
+        final isFirstStep = _currentStep == 0;
+        final screenSize = MediaQuery.of(context).size;
 
-    return Material(
-      color: Colors.transparent,
-      child: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
-          return Stack(
-            children: [
-              // Dark overlay dengan spotlight hole
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: _SpotlightPainter(
-                    targetRect: _targetRect,
-                    opacity: _fadeAnimation.value * 0.85,
-                  ),
+        // Theme colors
+        final primaryColor = isWizard ? _wizardGold : _seaMedium;
+        final secondaryColor = isWizard ? _wizardPurple : _seaLight;
+
+        return Stack(
+          children: [
+            // Dark overlay dengan spotlight hole
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _SpotlightPainter(
+                  targetRect: _targetRect,
+                  opacity: _fadeAnimation.value * (isWizard ? 0.9 : 0.85),
+                  isWizard: isWizard,
                 ),
               ),
+            ),
 
-              // Highlight border untuk target
-              if (_targetRect != null)
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 300),
-                  left: _targetRect!.left - 8,
-                  top: _targetRect!.top - 8,
-                  width: _targetRect!.width + 16,
-                  height: _targetRect!.height + 16,
-                  child: IgnorePointer(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: _seaMedium.withAlpha(
-                            (200 * _fadeAnimation.value).toInt(),
-                          ),
-                          width: 3,
+            // Highlight border untuk target
+            if (_targetRect != null)
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                left: _targetRect!.left - 8,
+                top: _targetRect!.top - 8,
+                width: _targetRect!.width + 16,
+                height: _targetRect!.height + 16,
+                child: IgnorePointer(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: primaryColor.withAlpha(
+                          (200 * _fadeAnimation.value).toInt(),
                         ),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: _seaLight.withAlpha(
-                              (150 * _fadeAnimation.value).toInt(),
-                            ),
-                            blurRadius: 20,
-                            spreadRadius: 5,
-                          ),
-                        ],
+                        width: 3,
                       ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: secondaryColor.withAlpha(
+                            (150 * _fadeAnimation.value).toInt(),
+                          ),
+                          blurRadius: 20,
+                          spreadRadius: 5,
+                        ),
+                      ],
                     ),
                   ),
                 ),
+              ),
 
-              // Pulsing indicator arrow
-              if (_targetRect != null) _buildArrowIndicator(),
+            // Pulsing indicator arrow
+            if (_targetRect != null) _buildArrowIndicator(primaryColor),
 
-              // Tutorial card
-              Positioned(
-                left: 16,
-                right: 16,
-                bottom: _targetRect != null
-                    ? (_targetRect!.bottom > screenSize.height * 0.6
-                          ? screenSize.height - _targetRect!.top + 24
-                          : 100)
-                    : screenSize.height * 0.3,
-                child: Opacity(
-                  opacity: _fadeAnimation.value,
-                  child: _buildTutorialCard(step, isFirstStep, isLastStep),
+            // Tutorial card
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: _targetRect != null
+                  ? (_targetRect!.bottom > screenSize.height * 0.6
+                        ? screenSize.height - _targetRect!.top + 24
+                        : 100)
+                  : screenSize.height * 0.3,
+              child: Opacity(
+                opacity: _fadeAnimation.value,
+                child: _buildTutorialCard(
+                  step,
+                  isFirstStep,
+                  isLastStep,
+                  isWizard,
                 ),
               ),
-            ],
-          );
-        },
-      ),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildArrowIndicator() {
+  Widget _buildArrowIndicator(Color color) {
     if (_targetRect == null) return const SizedBox.shrink();
 
     final screenSize = MediaQuery.of(context).size;
@@ -313,7 +332,7 @@ class _TutorialOverlayState extends State<_TutorialOverlay>
         },
         child: Icon(
           isTargetOnTop ? Icons.arrow_upward : Icons.arrow_downward,
-          color: _seaMedium,
+          color: color,
           size: 40,
         ),
       ),
@@ -324,19 +343,24 @@ class _TutorialOverlayState extends State<_TutorialOverlay>
     TutorialStep step,
     bool isFirstStep,
     bool isLastStep,
+    bool isWizard,
   ) {
+    final primaryColor = isWizard ? _wizardGold : _seaMedium;
+    final deepColor = isWizard ? _wizardDeepPurple : _seaDeep;
+
     return Container(
       constraints: const BoxConstraints(maxWidth: 400),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isWizard ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: _seaDeep.withAlpha(60),
+            color: (isWizard ? Colors.black : deepColor).withAlpha(60),
             blurRadius: 20,
             spreadRadius: 2,
           ),
         ],
+        border: isWizard ? Border.all(color: primaryColor.withAlpha(50)) : null,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -344,11 +368,21 @@ class _TutorialOverlayState extends State<_TutorialOverlay>
           // Header
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [_foamLight, _seaLight, _seaMedium],
+                colors: isWizard
+                    ? [
+                        deepColor,
+                        _wizardPurple,
+                        _wizardLightPurple,
+                        _wizardGold,
+                      ]
+                    : [_foamLight, _seaLight, _seaMedium],
+                stops: isWizard ? [0.0, 0.4, 0.8, 1.0] : null,
               ),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
             ),
             child: Row(
               children: [
@@ -358,16 +392,21 @@ class _TutorialOverlayState extends State<_TutorialOverlay>
                     color: Colors.white.withAlpha(50),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(step.icon, color: Colors.white, size: 24),
+                  child: Icon(
+                    step.icon,
+                    color: isWizard ? _wizardGold : Colors.white,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     step.title,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: isWizard ? _wizardGold : Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
+                      fontFamily: isWizard ? 'Cinzel' : null,
                     ),
                   ),
                 ),
@@ -383,8 +422,8 @@ class _TutorialOverlayState extends State<_TutorialOverlay>
                   ),
                   child: Text(
                     '${_currentStep + 1}/${widget.steps.length}',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: isWizard ? _wizardGold : Colors.white,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -401,7 +440,7 @@ class _TutorialOverlayState extends State<_TutorialOverlay>
               step.description,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[700],
+                color: isWizard ? Colors.white70 : Colors.grey[700],
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
@@ -421,7 +460,7 @@ class _TutorialOverlayState extends State<_TutorialOverlay>
                   height: 6,
                   width: isActive ? 20 : 6,
                   decoration: BoxDecoration(
-                    color: isActive ? _seaMedium : Colors.grey[300],
+                    color: isActive ? primaryColor : Colors.grey[300],
                     borderRadius: BorderRadius.circular(3),
                   ),
                 );
@@ -433,7 +472,7 @@ class _TutorialOverlayState extends State<_TutorialOverlay>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.grey[50],
+              color: isWizard ? Colors.white.withAlpha(5) : Colors.grey[50],
               borderRadius: const BorderRadius.vertical(
                 bottom: Radius.circular(20),
               ),
@@ -445,7 +484,9 @@ class _TutorialOverlayState extends State<_TutorialOverlay>
                     onPressed: widget.onSkip,
                     child: Text(
                       'Lewati',
-                      style: TextStyle(color: Colors.grey[600]),
+                      style: TextStyle(
+                        color: isWizard ? Colors.white54 : Colors.grey[600],
+                      ),
                     ),
                   ),
                 const Spacer(),
@@ -454,7 +495,9 @@ class _TutorialOverlayState extends State<_TutorialOverlay>
                     onPressed: _previousStep,
                     icon: const Icon(Icons.arrow_back, size: 16),
                     label: const Text('Kembali'),
-                    style: TextButton.styleFrom(foregroundColor: _seaDeep),
+                    style: TextButton.styleFrom(
+                      foregroundColor: isWizard ? _wizardGold : _seaDeep,
+                    ),
                   ),
                 const SizedBox(width: 8),
                 ElevatedButton.icon(
@@ -465,8 +508,8 @@ class _TutorialOverlayState extends State<_TutorialOverlay>
                   ),
                   label: Text(isLastStep ? 'Selesai' : 'Lanjut'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _seaMedium,
-                    foregroundColor: Colors.white,
+                    backgroundColor: isWizard ? _wizardPurple : _seaMedium,
+                    foregroundColor: isWizard ? _wizardGold : Colors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 10,
@@ -489,13 +532,19 @@ class _TutorialOverlayState extends State<_TutorialOverlay>
 class _SpotlightPainter extends CustomPainter {
   final Rect? targetRect;
   final double opacity;
+  final bool isWizard;
 
-  _SpotlightPainter({this.targetRect, required this.opacity});
+  _SpotlightPainter({
+    this.targetRect,
+    required this.opacity,
+    this.isWizard = false,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
+    final overlayColor = isWizard ? const Color(0xFF0A0014) : Colors.black;
     final paint = Paint()
-      ..color = Colors.black.withValues(alpha: opacity)
+      ..color = overlayColor.withValues(alpha: opacity)
       ..style = PaintingStyle.fill;
 
     final path = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
@@ -521,6 +570,7 @@ class _SpotlightPainter extends CustomPainter {
   @override
   bool shouldRepaint(_SpotlightPainter oldDelegate) {
     return targetRect != oldDelegate.targetRect ||
-        opacity != oldDelegate.opacity;
+        opacity != oldDelegate.opacity ||
+        isWizard != oldDelegate.isWizard;
   }
 }

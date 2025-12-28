@@ -157,7 +157,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              user.identifier,
+                              user.identifier ?? 'N/A',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,

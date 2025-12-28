@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "83128997767",
+    "project_id": "riau-education",
+    "storage_bucket": "riau-education.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:83128997767:android:e625a509328f00b7dc2522",
+        "android_client_info": {
+          "package_name": "com.example.alp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "83128997767-2k4m9rrofgt8a9d712m4vt0p0lg511i3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0fTx2ST8LfwIZSTQ_UiGOqXOF1YEUb_4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "83128997767-2k4m9rrofgt8a9d712m4vt0p0lg511i3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

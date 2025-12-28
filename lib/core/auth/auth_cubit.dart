@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:developer' as dev;
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../database/database_helper.dart';
+import 'firebase_auth_service.dart';
 import 'models/user_model.dart';
 
 // Auth States
@@ -19,6 +22,12 @@ class Unauthenticated extends AuthState {
 class Authenticated extends AuthState {
   final User user;
   Authenticated(this.user);
+}
+
+/// State when user is signed in with Google but hasn't selected a role yet
+class RoleSelectionRequired extends AuthState {
+  final firebase_auth.User firebaseUser;
+  RoleSelectionRequired(this.firebaseUser);
 }
 
 class OnboardingRequired extends AuthState {
@@ -39,11 +48,49 @@ class RegistrationSuccess extends AuthState {
 // Auth Cubit
 class AuthCubit extends Cubit<AuthState> {
   final DatabaseHelper _dbHelper;
-  static const String _currentUserIdKey = 'current_user_id';
+  final FirebaseAuthService _firebaseAuthService;
+
   static const String _onboardingCompletedKey = 'onboarding_completed';
 
-  AuthCubit(this._dbHelper) : super(AuthInitial()) {
-    _checkAuthStatus();
+  StreamSubscription<firebase_auth.User?>? _authStateSubscription;
+
+  AuthCubit(this._dbHelper, this._firebaseAuthService) : super(AuthInitial()) {
+    _init();
+  }
+
+  Future<void> _init() async {
+    // Listen to Firebase auth state changes
+    _authStateSubscription = _firebaseAuthService.authStateChanges.listen(
+      _onAuthStateChanged,
+    );
+
+    // Initial auth check
+    await _checkAuthStatus();
+  }
+
+  @override
+  Future<void> close() {
+    _authStateSubscription?.cancel();
+    return super.close();
+  }
+
+  void _onAuthStateChanged(firebase_auth.User? firebaseUser) async {
+    if (firebaseUser == null) {
+      // User signed out
+      final hasUsers = await _dbHelper.hasAnyUser();
+      emit(Unauthenticated(hasUsers: hasUsers));
+    } else {
+      // User signed in, check if profile exists
+      final userProfile = await _firebaseAuthService.getUserProfile(
+        firebaseUser.uid,
+      );
+      if (userProfile != null) {
+        emit(Authenticated(userProfile));
+      } else {
+        // New user, need to select role
+        emit(RoleSelectionRequired(firebaseUser));
+      }
+    }
   }
 
   Future<void> _checkAuthStatus() async {
@@ -56,19 +103,17 @@ class AuthCubit extends Cubit<AuthState> {
     // 2. Data Loading (SharedPreferences)
     final prefsTask = SharedPreferences.getInstance();
 
-    // 3. Data Loading (Database Check - dependent on DB helper which is sync, but we check users async)
+    // 3. Data Loading (Database Check)
     final hasUsersTask = _dbHelper.hasAnyUser();
 
     try {
       // WAIT FOR ALL TASKS TO COMPLETE
-      // This runs them in parallel. We wait for the longest one (likely the 1.5s timer).
       final results = await Future.wait([
         minSplashTask,
         prefsTask,
         hasUsersTask,
       ]);
 
-      // Extract results
       final prefs = results[1] as SharedPreferences;
       final hasUsers = results[2] as bool;
 
@@ -80,23 +125,24 @@ class AuthCubit extends Cubit<AuthState> {
         return;
       }
 
-      // 4. CHECK USER EXISTENCE (Enforce User Selection on Startup)
-      // We check for a stored current_user_id here.
-      // This ensures that on cold start, if a user was previously logged in,
-      // they are automatically authenticated.
-
-      final userId = prefs.getInt(_currentUserIdKey);
-
-      if (userId != null) {
-        final user = await _dbHelper.getUserById(userId);
-        if (user != null) {
-          emit(Authenticated(user));
-          return;
+      // Check Firebase auth status
+      final firebaseUser = _firebaseAuthService.currentUser;
+      if (firebaseUser != null) {
+        // User is signed in with Firebase
+        final userProfile = await _firebaseAuthService.getUserProfile(
+          firebaseUser.uid,
+        );
+        if (userProfile != null) {
+          emit(Authenticated(userProfile));
+        } else {
+          // User is signed in but hasn't completed profile
+          emit(RoleSelectionRequired(firebaseUser));
         }
+      } else {
+        emit(Unauthenticated(hasUsers: hasUsers));
       }
-
-      emit(Unauthenticated(hasUsers: hasUsers));
     } catch (e) {
+      dev.log('Error checking auth status: $e', name: 'AuthCubit');
       emit(AuthError('Failed to check authentication status: $e'));
     }
   }
@@ -105,44 +151,168 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_onboardingCompletedKey, true);
-      // Don't call _checkAuthStatus() here - let the caller handle navigation
-      // This prevents the router from immediately redirecting before navigation
     } catch (e) {
       emit(AuthError('Failed to complete onboarding: $e'));
     }
   }
 
+  /// Sign in with Google
+  Future<void> signInWithGoogle() async {
+    emit(AuthLoading());
+    try {
+      final firebaseUser = await _firebaseAuthService.signInWithGoogle();
+      if (firebaseUser == null) {
+        emit(Unauthenticated());
+        return;
+      }
+
+      // Check if user profile exists
+      final userProfile = await _firebaseAuthService.getUserProfile(
+        firebaseUser.uid,
+      );
+      if (userProfile != null) {
+        emit(Authenticated(userProfile));
+      } else {
+        // New user, need to select role
+        emit(RoleSelectionRequired(firebaseUser));
+      }
+    } catch (e) {
+      dev.log('Error signing in with Google: $e', name: 'AuthCubit');
+      emit(AuthError('Sign in failed: ${e.toString()}'));
+    }
+  }
+
+  /// Complete profile setup after Google Sign-In by selecting role
+  Future<void> completeProfile({
+    required firebase_auth.User firebaseUser,
+    required UserRole role,
+    String? identifier,
+    DateTime? dateOfBirth,
+  }) async {
+    emit(AuthLoading());
+    try {
+      final userProfile = await _firebaseAuthService.getOrCreateUserProfile(
+        firebaseUser: firebaseUser,
+        role: role,
+      );
+
+      if (userProfile != null) {
+        // Update with additional info if provided
+        if (identifier != null || dateOfBirth != null) {
+          final updatedUser = userProfile.copyWith(
+            identifier: identifier,
+            dateOfBirth: dateOfBirth,
+          );
+          await _firebaseAuthService.updateUserProfile(updatedUser);
+          emit(Authenticated(updatedUser));
+        } else {
+          emit(Authenticated(userProfile));
+        }
+      } else {
+        emit(AuthError('Failed to create user profile'));
+      }
+    } catch (e) {
+      dev.log('Error completing profile: $e', name: 'AuthCubit');
+      emit(AuthError('Failed to complete profile: $e'));
+    }
+  }
+
+  /// Migrate local user data to Firestore
+  Future<void> migrateLocalUsers() async {
+    try {
+      final firebaseUser = _firebaseAuthService.currentUser;
+      if (firebaseUser == null) return;
+
+      // Get all local users
+      final localUsers = await _dbHelper.getAllUsers();
+
+      for (final localUser in localUsers) {
+        // Check if email matches (if available) or migrate all to current Firebase user
+        await _firebaseAuthService.migrateLocalUser(
+          uid: firebaseUser.uid,
+          identifier: localUser.identifier ?? '',
+          name: localUser.name,
+          dateOfBirth: localUser.dateOfBirth,
+          role: localUser.role,
+          apiKey: localUser.apiKey,
+          selectedModel: localUser.selectedModel,
+        );
+      }
+
+      dev.log('Migrated ${localUsers.length} local users', name: 'AuthCubit');
+    } catch (e) {
+      dev.log('Error migrating local users: $e', name: 'AuthCubit');
+    }
+  }
+
+  Future<void> logout() async {
+    try {
+      await _firebaseAuthService.signOut();
+      final hasUsers = await _dbHelper.hasAnyUser();
+      emit(Unauthenticated(hasUsers: hasUsers));
+    } catch (e) {
+      emit(AuthError('Logout failed: $e'));
+    }
+  }
+
+  Future<void> refreshCurrentUser() async {
+    if (state is Authenticated) {
+      final currentUser = (state as Authenticated).user;
+      if (currentUser.uid != null) {
+        final updatedUser = await _firebaseAuthService.getUserProfile(
+          currentUser.uid!,
+        );
+        if (updatedUser != null) {
+          emit(Authenticated(updatedUser));
+        }
+      }
+    }
+  }
+
+  Future<void> reloadAuthStatus() async {
+    await _checkAuthStatus();
+  }
+
+  /// Update user profile (e.g., API key, selected model)
+  Future<void> updateUserProfile(User updatedUser) async {
+    try {
+      await _firebaseAuthService.updateUserProfile(updatedUser);
+      emit(Authenticated(updatedUser));
+    } catch (e) {
+      dev.log('Error updating user profile: $e', name: 'AuthCubit');
+      emit(AuthError('Failed to update profile: $e'));
+    }
+  }
+
+  // ============================================
+  // LEGACY METHODS - Kept for backward compatibility
+  // These will use local SQLite database
+  // ============================================
+
   Future<void> login(String identifier, String pin) async {
     emit(AuthLoading());
     try {
-      // Strict sanitization: remove any non-digit characters
       final cleanIdentifier = identifier.replaceAll(RegExp(r'[^0-9]'), '');
-
-      // Try strict lookup first
       var user = await _dbHelper.getUserByIdentifier(cleanIdentifier);
 
       // Auto-Repair: User might be saved with invisible characters (legacy)
       if (user == null) {
         final allUsers = await _dbHelper.getAllUsers();
         try {
-          // Scan for any user whose "cleaned" identifier matches our input
           final dirtyUser = allUsers.firstWhere(
             (u) =>
-                u.identifier.replaceAll(RegExp(r'[^0-9]'), '') ==
+                (u.identifier ?? '').replaceAll(RegExp(r'[^0-9]'), '') ==
                 cleanIdentifier,
           );
-
-          // Found it! Clean the database record immediately
           user = dirtyUser.copyWith(identifier: cleanIdentifier);
           await _dbHelper.updateUser(user);
-          // Successfully repaired and retrieved the user
         } catch (_) {
           // Truly not found
         }
       }
 
       if (user == null) {
-        emit(AuthError('User not found: $cleanIdentifier')); // Debug info
+        emit(AuthError('User not found: $cleanIdentifier'));
         return;
       }
 
@@ -151,7 +321,6 @@ class AuthCubit extends Cubit<AuthState> {
         return;
       }
 
-      await _setCurrentUser(user.id!);
       emit(Authenticated(user));
     } catch (e) {
       emit(AuthError('Login failed: $e'));
@@ -168,14 +337,10 @@ class AuthCubit extends Cubit<AuthState> {
     dev.log('register() called', name: 'AuthCubit');
     emit(AuthLoading());
     try {
-      // Strict sanitization
       final cleanIdentifier = identifier.replaceAll(RegExp(r'[^0-9]'), '');
-      dev.log('cleanIdentifier: $cleanIdentifier', name: 'AuthCubit');
 
-      // Check if user already exists
       final existingUser = await _dbHelper.getUserByIdentifier(cleanIdentifier);
       if (existingUser != null) {
-        dev.log('User already exists', name: 'AuthCubit');
         emit(
           AuthError(
             'User with this ${role == UserRole.student ? 'NISN' : 'NUPTK'} already exists',
@@ -184,7 +349,6 @@ class AuthCubit extends Cubit<AuthState> {
         return;
       }
 
-      // Create new user with PIN
       final newUser = User(
         identifier: cleanIdentifier,
         name: name,
@@ -193,17 +357,9 @@ class AuthCubit extends Cubit<AuthState> {
         pin: pin,
       );
 
-      dev.log('Creating user in database...', name: 'AuthCubit');
       final userId = await _dbHelper.createUser(newUser);
-      dev.log('User created with ID: $userId', name: 'AuthCubit');
       final createdUser = newUser.copyWith(id: userId);
-
-      // Auto-login after registration - user goes directly to dashboard
-      dev.log('Setting current user...', name: 'AuthCubit');
-      await _setCurrentUser(createdUser.id!);
-      dev.log('Emitting Authenticated state', name: 'AuthCubit');
       emit(Authenticated(createdUser));
-      dev.log('Authenticated state emitted', name: 'AuthCubit');
     } catch (e) {
       dev.log('Registration error: $e', name: 'AuthCubit', error: e);
       emit(AuthError('Registration failed: $e'));
@@ -218,8 +374,6 @@ class AuthCubit extends Cubit<AuthState> {
         emit(AuthError('User not found'));
         return;
       }
-
-      await _setCurrentUser(userId);
       emit(Authenticated(user));
     } catch (e) {
       emit(AuthError('Failed to select user: $e'));
@@ -231,12 +385,10 @@ class AuthCubit extends Cubit<AuthState> {
 
     final user = (state as Authenticated).user;
 
-    // Verify current PIN
     if (user.pin != currentPin) {
       return false;
     }
 
-    // Update PIN
     final updatedUser = user.copyWith(pin: newPin);
     await _dbHelper.updateUser(updatedUser);
     emit(Authenticated(updatedUser));
@@ -247,51 +399,12 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       await _dbHelper.deleteUser(userId);
-      // Determine if any users remain
       final hasUsers = await _dbHelper.hasAnyUser();
       emit(Unauthenticated(hasUsers: hasUsers));
     } catch (e) {
       emit(AuthError('Failed to delete user: $e'));
-      // Fallback to unauthenticated mostly likely
       final hasUsers = await _dbHelper.hasAnyUser();
       emit(Unauthenticated(hasUsers: hasUsers));
-    }
-  }
-
-  Future<void> logout() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_currentUserIdKey);
-
-      final hasUsers = await _dbHelper.hasAnyUser();
-      emit(Unauthenticated(hasUsers: hasUsers));
-    } catch (e) {
-      emit(AuthError('Logout failed: $e'));
-    }
-  }
-
-  Future<void> _setCurrentUser(int userId) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_currentUserIdKey, userId);
-  }
-
-  Future<void> refreshCurrentUser() async {
-    if (state is Authenticated) {
-      final currentUser = (state as Authenticated).user;
-      final updatedUser = await _dbHelper.getUserById(currentUser.id!);
-      if (updatedUser != null) {
-        emit(Authenticated(updatedUser));
-      }
-    }
-  }
-
-  Future<void> reloadAuthStatus() async {
-    // Quick check to reset state after registration or other events
-    try {
-      final hasUsers = await _dbHelper.hasAnyUser();
-      emit(Unauthenticated(hasUsers: hasUsers));
-    } catch (e) {
-      emit(AuthError('Failed to reload auth status: $e'));
     }
   }
 }

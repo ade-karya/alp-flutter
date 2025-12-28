@@ -1,4 +1,6 @@
 # Project-level configuration.
+# Allow older Firebase SDK CMake files that specify versions < 3.5
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 cmake_minimum_required(VERSION 3.14)
 project(alp LANGUAGES CXX)
 
@@ -48,6 +50,9 @@ endfunction()
 # Flutter library and tool build rules.
 set(FLUTTER_MANAGED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/flutter")
 add_subdirectory(${FLUTTER_MANAGED_DIR})
+
+# Link Windows Runtime library required by flutter_tts and other WinRT-based plugins
+link_libraries(runtimeobject)
 
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")

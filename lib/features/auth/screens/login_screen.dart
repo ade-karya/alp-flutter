@@ -7,6 +7,8 @@ import '../../../l10n/arb/app_localizations.dart';
 import 'package:alp/features/shared/widgets/language_selector.dart';
 import '../../../core/theme/theme_cubit.dart';
 import '../../../core/theme/app_themes.dart';
+import '../../../core/widgets/wizard_widgets.dart';
+import '../../../core/theme/wizard_background.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,28 +18,17 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _identifierController = TextEditingController();
-  final _pinController = TextEditingController();
+  bool _isLoading = false;
 
-  // Default to Student
-  UserRole _selectedRole = UserRole.student;
-  bool _isObscured = true;
-
-  @override
-  void dispose() {
-    _identifierController.dispose();
-    _pinController.dispose();
-    super.dispose();
-  }
-
-  void _login() {
-    if (_formKey.currentState!.validate()) {
-      context.read<AuthCubit>().login(
-        _identifierController.text.trim(),
-        _pinController.text.trim(),
-      );
-    }
+  void _signInWithGoogle() {
+    setState(() => _isLoading = true);
+    context.read<AuthCubit>().signInWithGoogle();
+    // Safety timeout to prevent stuck state
+    Future.delayed(const Duration(seconds: 10), () {
+      if (mounted && _isLoading) {
+        setState(() => _isLoading = false);
+      }
+    });
   }
 
   @override
@@ -47,285 +38,239 @@ class _LoginScreenState extends State<LoginScreen> {
       (ThemeCubit cubit) => cubit.state == AppThemeMode.wizard,
     );
 
-    return Scaffold(
-      backgroundColor: isWizard ? Colors.transparent : Colors.grey[50],
-      body: BlocConsumer<AuthCubit, AuthState>(
-        listener: (context, state) {
-          if (state is Authenticated) {
-            if (state.user.role == UserRole.student) {
-              context.go('/student/dashboard');
-            } else {
-              context.go('/teacher/dashboard');
-            }
-          } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is AuthLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.blue),
-            );
-          }
+    final body = BlocConsumer<AuthCubit, AuthState>(
+      listener: (context, state) {
+        setState(() => _isLoading = false);
 
-          return SafeArea(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  // Header with branding
-                  _buildHeader(context, l10n, isWizard),
+        if (state is Authenticated) {
+          if (state.user.role == UserRole.student) {
+            context.go('/student/dashboard');
+          } else {
+            context.go('/teacher/dashboard');
+          }
+        } else if (state is RoleSelectionRequired) {
+          context.go('/register');
+        } else if (state is AuthError) {
+          WizardWidgets.showSnackBar(
+            context: context,
+            message: state.message,
+            isError: true,
+            isWizard: isWizard,
+          );
+        }
+      },
+      builder: (context, state) {
+        if (state is AuthLoading || _isLoading) {
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.blue),
+          );
+        }
 
-                  // Form Section
-                  Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 500),
-                        child: Container(
-                          padding: const EdgeInsets.all(32),
-                          decoration: BoxDecoration(
-                            color: isWizard
-                                ? Colors.black.withValues(alpha: 0.5)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withAlpha(isWizard ? 0 : 30),
-                                spreadRadius: 2,
-                                blurRadius: 20,
-                                offset: const Offset(0, 8),
+        return SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                // Header with branding
+                _buildHeader(context, l10n, isWizard),
+
+                // Login Section
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 500),
+                      child: Container(
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(
+                          color: isWizard
+                              ? Colors.black.withValues(alpha: 0.5)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withAlpha(isWizard ? 0 : 30),
+                              spreadRadius: 2,
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                          border: isWizard
+                              ? Border.all(color: Colors.white24)
+                              : null,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Title
+                            Text(
+                              l10n.loginTitle,
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: isWizard ? Colors.white : Colors.black87,
                               ),
-                            ],
-                            border: isWizard
-                                ? Border.all(color: Colors.white24)
-                                : null,
-                          ),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              textAlign: TextAlign.center,
+                            ),
+                            Text(
+                              l10n.welcomeMessage,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isWizard
+                                    ? Colors.white70
+                                    : Colors.grey[600],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 48),
+
+                            // Google Sign-In Button
+                            _buildGoogleSignInButton(l10n, isWizard),
+                            const SizedBox(height: 24),
+
+                            // Divider with text
+                            Row(
                               children: [
-                                // Welcome Text
-                                Text(
-                                  'Selamat Datang!',
-                                  style: TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
+                                Expanded(
+                                  child: Divider(
                                     color: isWizard
-                                        ? Colors.white
-                                        : Colors.black87,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Masuk untuk melanjutkan',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: isWizard
-                                        ? Colors.white70
-                                        : Colors.grey[600],
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 32),
-
-                                // Role Selection Toggle
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: isWizard
-                                        ? Colors.white.withValues(alpha: 0.1)
-                                        : Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  padding: const EdgeInsets.all(4),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: _buildRoleButton(
-                                          role: UserRole.student,
-                                          label: l10n.roleStudent,
-                                          icon: Icons.school,
-                                          color: isWizard
-                                              ? Colors.amber
-                                              : Colors.blue,
-                                          isWizard: isWizard,
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: _buildRoleButton(
-                                          role: UserRole.teacher,
-                                          label: l10n.roleTeacher,
-                                          icon: Icons.person_outline,
-                                          color: isWizard
-                                              ? Colors.purpleAccent
-                                              : Colors.green,
-                                          isWizard: isWizard,
-                                        ),
-                                      ),
-                                    ],
+                                        ? Colors.white24
+                                        : Colors.grey[300],
                                   ),
                                 ),
-                                const SizedBox(height: 24),
-
-                                // Identifier Input (NISN or NUPTK)
-                                _buildTextField(
-                                  controller: _identifierController,
-                                  label: _selectedRole == UserRole.student
-                                      ? l10n.labelNISN
-                                      : l10n.labelNUPTK,
-                                  icon: Icons.badge,
-                                  keyboardType: TextInputType.number,
-                                  isWizard: isWizard,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return _selectedRole == UserRole.student
-                                          ? l10n.errorEmptyNISN
-                                          : l10n.errorEmptyNUPTK;
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 16),
-
-                                // PIN Input
-                                _buildTextField(
-                                  controller: _pinController,
-                                  label: l10n.labelPIN,
-                                  icon: Icons.lock,
-                                  keyboardType: TextInputType.number,
-                                  obscureText: _isObscured,
-                                  isWizard: isWizard,
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _isObscured
-                                          ? Icons.visibility
-                                          : Icons.visibility_off,
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  child: Text(
+                                    'Secure Login',
+                                    style: TextStyle(
                                       color: isWizard
-                                          ? Colors.white70
-                                          : Colors.grey[600],
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _isObscured = !_isObscured;
-                                      });
-                                    },
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return l10n.errorEmptyPIN;
-                                    }
-                                    if (value.length < 4) {
-                                      return l10n.errorShortPIN;
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 32),
-
-                                // Login Button
-                                Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: isWizard
-                                          ? [
-                                              const Color(0xFF6A1B9A),
-                                              const Color(0xFF4A148C),
-                                            ]
-                                          : [
-                                              Colors.blue[400]!,
-                                              Colors.blue[700]!,
-                                            ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: isWizard
-                                            ? Colors.purple.withValues(
-                                                alpha: 0.4,
-                                              )
-                                            : Colors.blue.withAlpha(80),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 6),
-                                      ),
-                                    ],
-                                    border: isWizard
-                                        ? Border.all(color: Colors.white24)
-                                        : null,
-                                  ),
-                                  child: ElevatedButton(
-                                    onPressed: _login,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.transparent,
-                                      shadowColor: Colors.transparent,
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      l10n.loginButton,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
+                                          ? Colors.white54
+                                          : Colors.grey[500],
+                                      fontSize: 12,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 24),
-
-                                // Register Link
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Belum punya akun? ',
-                                      style: TextStyle(
-                                        color: isWizard
-                                            ? Colors.white70
-                                            : Colors.grey[600],
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () => context.go('/register'),
-                                      child: Text(
-                                        l10n.registerLink,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: isWizard
-                                              ? Colors.amber
-                                              : Colors.blue,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                Expanded(
+                                  child: Divider(
+                                    color: isWizard
+                                        ? Colors.white24
+                                        : Colors.grey[300],
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
+                            const SizedBox(height: 24),
+
+                            // Info text
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: isWizard
+                                    ? Colors.white.withValues(alpha: 0.05)
+                                    : Colors.blue.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isWizard
+                                      ? Colors.white12
+                                      : Colors.blue.withValues(alpha: 0.2),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.info_outline,
+                                    size: 20,
+                                    color: isWizard
+                                        ? Colors.amber
+                                        : Colors.blue[600],
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Masuk dengan akun Google untuk menyimpan data secara aman di cloud',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: isWizard
+                                            ? Colors.white70
+                                            : Colors.grey[700],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        },
+          ),
+        );
+      },
+    );
+
+    return Scaffold(
+      backgroundColor: isWizard ? Colors.transparent : Colors.grey[50],
+      body: isWizard ? WizardBackground(child: body) : body,
+    );
+  }
+
+  Widget _buildGoogleSignInButton(AppLocalizations l10n, bool isWizard) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(
+          color: isWizard ? Colors.white24 : Colors.grey[300]!,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _signInWithGoogle,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Google Logo
+                Image.network(
+                  'https://developers.google.com/identity/images/g-logo.png',
+                  width: 24,
+                  height: 24,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(
+                      Icons.g_mobiledata,
+                      color: Colors.red,
+                      size: 32,
+                    );
+                  },
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Masuk dengan Google',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -337,16 +282,9 @@ class _LoginScreenState extends State<LoginScreen> {
   ) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
       decoration: BoxDecoration(
-        gradient: isWizard
-            ? null
-            : LinearGradient(
-                colors: [Colors.blue[400]!, Colors.blue[700]!],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-        color: isWizard ? Colors.transparent : null,
+        color: isWizard ? Colors.transparent : Colors.blue[600],
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(40),
           bottomRight: Radius.circular(40),
@@ -354,20 +292,18 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       child: Column(
         children: [
-          // Top row with language selector
           const Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [LanguageSelector()],
           ),
-          const SizedBox(height: 24),
-          // Sikolah Apps Logo
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: 10,
+                  vertical: 8,
                 ),
                 decoration: BoxDecoration(
                   color: Colors.red[700],
@@ -388,7 +324,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: 10,
+                  vertical: 8,
                 ),
                 decoration: BoxDecoration(
                   color: Colors.green[700],
@@ -410,118 +346,13 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Platform Pembelajaran Adaptif',
-            style: TextStyle(color: Colors.white.withAlpha(220), fontSize: 14),
+            l10n.welcomeMessage,
+            style: TextStyle(
+              color: isWizard ? Colors.white70 : Colors.white,
+              fontSize: 14,
+            ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildRoleButton({
-    required UserRole role,
-    required String label,
-    required IconData icon,
-    required Color color,
-    required bool isWizard,
-  }) {
-    final isSelected = _selectedRole == role;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedRole = role;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: isSelected ? color : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: isSelected
-                  ? Colors.white
-                  : (isWizard ? Colors.white70 : Colors.grey[600]),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected
-                    ? Colors.white
-                    : (isWizard ? Colors.white70 : Colors.grey[600]),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    required bool isWizard,
-    TextInputType? keyboardType,
-    bool obscureText = false,
-    Widget? suffixIcon,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      obscureText: obscureText,
-      validator: validator,
-      style: TextStyle(color: isWizard ? Colors.white : Colors.black),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(
-          color: isWizard ? Colors.white70 : Colors.grey[600],
-        ),
-        prefixIcon: Icon(
-          icon,
-          color: isWizard ? Colors.white70 : Colors.grey[600],
-        ),
-        suffixIcon: suffixIcon,
-        filled: true,
-        fillColor: isWizard
-            ? Colors.white.withValues(alpha: 0.1)
-            : Colors.grey[50],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: isWizard ? Colors.white24 : Colors.grey[300]!,
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: isWizard ? Colors.white24 : Colors.grey[300]!,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: isWizard ? Colors.amber : Colors.blue,
-            width: 2,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
       ),
     );
   }

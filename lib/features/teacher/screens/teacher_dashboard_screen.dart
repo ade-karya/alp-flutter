@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:alp/l10n/arb/app_localizations.dart';
 import '../../../core/theme/theme_cubit.dart';
 import '../../../core/theme/app_themes.dart';
 import '../../../core/auth/auth_cubit.dart';
-import '../../../core/widgets/app_drawer.dart';
 
 class TeacherDashboardScreen extends StatefulWidget {
   const TeacherDashboardScreen({super.key});
@@ -15,6 +15,57 @@ class TeacherDashboardScreen extends StatefulWidget {
 }
 
 class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
+  void _showLogoutConfirmation(BuildContext context) {
+    final isWizard = context.read<ThemeCubit>().state == AppThemeMode.wizard;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: isWizard ? const Color(0xFF1A1A1A) : Colors.white,
+          title: Text(
+            'Keluar',
+            style: TextStyle(color: isWizard ? Colors.amber : Colors.black),
+          ),
+          content: Text(
+            'Apakah Anda yakin ingin keluar?',
+            style: TextStyle(color: isWizard ? Colors.white70 : Colors.black87),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Batal',
+                style: TextStyle(
+                  color: isWizard ? Colors.white54 : Colors.grey[600],
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                context.read<AuthCubit>().logout();
+              },
+              child: const Text(
+                'Keluar Akun',
+                style: TextStyle(color: Colors.blue),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                SystemNavigator.pop();
+              },
+              child: const Text(
+                'Tutup Aplikasi',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showComingSoon(BuildContext context) {
     showDialog(
       context: context,
@@ -58,261 +109,24 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         return Scaffold(
           backgroundColor: isWizard ? Colors.transparent : Colors.white,
           appBar: _buildCustomAppBar(context, isPlayful, isWizard, isDesktop),
-          drawer: isDesktop ? null : const AppDrawer(),
-          body: Row(
-            children: [
-              // Permanent navigation rail for desktop
-              if (isDesktop) _buildNavigationRail(context, l10n, isWizard),
-
-              // Main content
-              Expanded(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: isDesktop ? 1400 : double.infinity,
-                    ),
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isDesktop ? 32 : 0,
-                        vertical: isDesktop ? 24 : 0,
-                      ),
-                      child: isDesktop
-                          ? _buildDesktopLayout(
-                              context,
-                              userName,
-                              l10n,
-                              isWizard,
-                            )
-                          : _buildMobileLayout(
-                              context,
-                              userName,
-                              l10n,
-                              isWizard,
-                            ),
-                    ),
-                  ),
-                ),
+          body: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: isDesktop ? 1400 : double.infinity,
               ),
-            ],
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isDesktop ? 32 : 0,
+                  vertical: isDesktop ? 24 : 0,
+                ),
+                child: isDesktop
+                    ? _buildDesktopLayout(context, userName, l10n, isWizard)
+                    : _buildMobileLayout(context, userName, l10n, isWizard),
+              ),
+            ),
           ),
         );
       },
-    );
-  }
-
-  // Navigation Rail for desktop
-  Widget _buildNavigationRail(
-    BuildContext context,
-    AppLocalizations l10n,
-    bool isWizard,
-  ) {
-    return Container(
-      width: 250,
-      decoration: BoxDecoration(
-        color: isWizard
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.grey[50],
-        border: Border(
-          right: BorderSide(
-            color: isWizard ? Colors.white10 : Colors.grey.shade200,
-          ),
-        ),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 20),
-          // Logo section
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.red[700],
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      bottomLeft: Radius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Sikolah',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.green[700],
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Apps',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          Divider(height: 1, color: isWizard ? Colors.white10 : Colors.grey),
-          const SizedBox(height: 10),
-          // Navigation items - scrollable
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  _buildNavItem(
-                    context,
-                    Icons.dashboard,
-                    'Dashboard',
-                    isSelected: true,
-                    onTap: () {},
-                    isWizard: isWizard,
-                  ),
-                  _buildNavItem(
-                    context,
-                    Icons.note_add,
-                    l10n.tileCreateContent,
-                    onTap: () => context.push('/teacher/create-content'),
-                    isWizard: isWizard,
-                  ),
-                  _buildNavItem(
-                    context,
-                    Icons.library_books,
-                    l10n.qbTitle,
-                    onTap: () => context.push('/teacher/question-bank'),
-                    isWizard: isWizard,
-                  ),
-                  _buildNavItem(
-                    context,
-                    Icons.people,
-                    l10n.tileManageClass,
-                    onTap: () => context.push('/teacher/manage-classes'),
-                    isWizard: isWizard,
-                  ),
-                  _buildNavItem(
-                    context,
-                    Icons.smart_toy,
-                    l10n.tileAIAssistant,
-                    onTap: () => context.push('/ai-assistant'),
-                    isWizard: isWizard,
-                  ),
-                  _buildNavItem(
-                    context,
-                    Icons.assessment,
-                    'Laporan Siswa',
-                    onTap: () => _showComingSoon(context),
-                    isWizard: isWizard,
-                  ),
-                  _buildNavItem(
-                    context,
-                    Icons.calendar_today,
-                    'Jadwal',
-                    onTap: () => _showComingSoon(context),
-                    isWizard: isWizard,
-                  ),
-                  _buildNavItem(
-                    context,
-                    Icons.grade,
-                    'Penilaian',
-                    onTap: () => _showComingSoon(context),
-                    isWizard: isWizard,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Divider(height: 1, color: isWizard ? Colors.white10 : Colors.grey),
-          _buildNavItem(
-            context,
-            Icons.settings,
-            'Pengaturan',
-            onTap: () => _showComingSoon(context),
-            isWizard: isWizard,
-          ),
-          _buildNavItem(
-            context,
-            Icons.logout,
-            'Keluar',
-            onTap: () {
-              context.read<AuthCubit>().logout();
-            },
-            isWizard: isWizard,
-          ),
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(
-    BuildContext context,
-    IconData icon,
-    String label, {
-    bool isSelected = false,
-    required VoidCallback onTap,
-    required bool isWizard,
-  }) {
-    final selectedColor = isWizard
-        ? const Color(0xFFFFD700)
-        : Colors.blue; // Gold for wizard
-    final unselectedColor = isWizard ? Colors.white70 : Colors.grey[700];
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          decoration: BoxDecoration(
-            color: isSelected ? selectedColor.withAlpha(25) : null,
-            border: Border(
-              left: BorderSide(
-                color: isSelected ? selectedColor : Colors.transparent,
-                width: 3,
-              ),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                size: 22,
-                color: isSelected ? selectedColor : unselectedColor,
-              ),
-              const SizedBox(width: 14),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  color: isSelected
-                      ? selectedColor
-                      : (isWizard ? Colors.white : Colors.grey[800]),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -420,7 +234,27 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           isDesktop: false,
           isWizard: isWizard,
         ),
-        const SizedBox(height: 40),
+        const SizedBox(height: 30),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: ElevatedButton.icon(
+            onPressed: () => _showLogoutConfirmation(context),
+            icon: const Icon(Icons.logout),
+            label: const Text('Keluar Aplikasi'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isWizard
+                  ? Colors.red.withAlpha(200)
+                  : Colors.red,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 2,
+            ),
+          ),
+        ),
+        const SizedBox(height: 60),
       ],
     );
   }
@@ -535,6 +369,11 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           icon: Icon(isWizard ? Icons.auto_awesome : Icons.palette_outlined),
           tooltip: 'Ganti Tema',
           onPressed: () => context.read<ThemeCubit>().toggleTheme(),
+        ),
+        IconButton(
+          icon: const Icon(Icons.logout),
+          tooltip: 'Keluar',
+          onPressed: () => _showLogoutConfirmation(context),
         ),
         if (isDesktop) const SizedBox(width: 16),
       ],
@@ -997,11 +836,19 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         'desc': 'Bantuan AI',
       },
       {
+        'icon': Icons.support_agent,
+        'id': 'ai_agent',
+        'label': 'AI Agent Guru',
+        'color': Colors.green,
+        'route': '/teacher/ai-agent',
+        'desc': 'Perintah Agent',
+      },
+      {
         'icon': Icons.assessment,
         'id': 'student_reports',
         'label': 'Laporan Siswa',
         'color': Colors.blue,
-        'route': null,
+        'route': '/teacher/reports',
         'desc': 'Analisis performa',
       },
       {
@@ -1084,6 +931,8 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         onTap: () {
           if (route != null) {
             context.push(route);
+          } else {
+            _showComingSoon(context);
           }
         },
         borderRadius: BorderRadius.circular(16),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/widgets/scaffold_with_navbar.dart';
 
+import '../../features/teacher/screens/teacher_reports_screen.dart';
 import '../../features/student/screens/student_dashboard_screen.dart';
 import '../../features/student/screens/ai_tutor_screen.dart';
 import '../../features/student/screens/my_courses_screen.dart';
@@ -31,6 +32,8 @@ import '../../features/auth/screens/registration_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/user_selection_screen.dart';
 import '../../features/profile/screens/change_pin_screen.dart';
+import '../../features/ai_assistant/screens/ai_agent_screen.dart';
+import '../../features/auth/screens/role_selection_screen.dart';
 
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/splash/screens/splash_screen.dart';
@@ -56,13 +59,19 @@ GoRouter createAppRouter(AuthCubit authCubit) {
       final goingOnboarding = path == '/onboarding';
       final goingSplash = path == '/splash';
 
-      // If still loading, error, or registration success → don't redirect
+      // If still loading, error, registration success, or role selection → don't redirect
       // RegistrationSuccess: let the registration screen handle showing the dialog
+      // RoleSelectionRequired: let the login screen show role selection dialog
       if (authState is AuthInitial ||
           authState is AuthLoading ||
           authState is AuthError ||
           authState is RegistrationSuccess) {
         return null; // Stay on current screen
+      }
+
+      // ROLE SELECTION
+      if (authState is RoleSelectionRequired) {
+        return '/register';
       }
 
       // ONBOARDING HANDLING
@@ -139,6 +148,10 @@ GoRouter createAppRouter(AuthCubit authCubit) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegistrationScreen(),
+      ),
+      GoRoute(
+        path: '/role-selection',
+        builder: (context, state) => const RoleSelectionScreen(),
       ),
       GoRoute(
         path: '/user-selection',
@@ -250,6 +263,14 @@ GoRouter createAppRouter(AuthCubit authCubit) {
                 ],
               ),
             ],
+          ),
+          GoRoute(
+            path: '/teacher/ai-agent',
+            builder: (context, state) => const AIAgentScreen(),
+          ),
+          GoRoute(
+            path: '/teacher/reports',
+            builder: (context, state) => const TeacherReportsScreen(),
           ),
 
           // PROFILE

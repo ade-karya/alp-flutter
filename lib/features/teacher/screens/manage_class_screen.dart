@@ -10,6 +10,8 @@ import '../../../core/database/database_helper.dart';
 import '../../../core/widgets/feature_tutorial.dart';
 import '../models/class_model.dart';
 import '../../../core/network/network_cubit.dart';
+import '../../../core/theme/theme_cubit.dart';
+import '../../../core/theme/app_themes.dart';
 
 class ManageClassScreen extends StatefulWidget {
   const ManageClassScreen({super.key});
@@ -33,15 +35,15 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
   List<TutorialStep> get _tutorialSteps {
     final steps = <TutorialStep>[
       const TutorialStep(
-        title: 'Selamat Datang! 👋',
+        title: 'Manajemen Kelas 🏛️',
         description:
-            'Ini adalah halaman Kelola Kelas. Di sini Anda dapat membuat dan mengelola kelas untuk siswa Anda.',
+            'Pantau seluruh aktivitas kelas Anda di satu tempat. Anda bisa mengatur pendaftaran siswa dan materi di sini.',
         icon: Icons.school,
       ),
       TutorialStep(
-        title: 'Buat Kelas Baru',
+        title: 'Tambah Kelas Baru',
         description:
-            'Tekan tombol hijau "+" ini untuk membuat kelas baru. Setiap kelas akan memiliki PIN unik untuk siswa bergabung.',
+            'Tekan tombol "+" ini untuk membuat ruang belajar baru. Setiap kelas akan mendapatkan Kode PIN unik.',
         icon: Icons.add_circle,
         targetKey: _fabKey,
       ),
@@ -51,23 +53,23 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
     if (_classes.isNotEmpty) {
       steps.addAll([
         TutorialStep(
-          title: 'Lihat Detail Kelas',
+          title: 'Akses Kelas 🔍',
           description:
-              'Tekan pada kartu kelas untuk melihat detail, daftar siswa, dan mengelola tugas untuk kelas tersebut.',
+              'Ketuk kartu kelas untuk melihat statistik, daftar siswa, dan mengelola tugas khusus untuk kelas ini.',
           icon: Icons.touch_app,
           targetKey: _classCardKey,
         ),
         TutorialStep(
-          title: 'Bagikan QR Code',
+          title: 'Gerbang Cepat ⚡',
           description:
-              'Gunakan tombol QR ini untuk menampilkan kode QR. Siswa dapat scan kode ini untuk bergabung ke kelas Anda.',
+              'Tampilkan Kode QR untuk mempermudah siswa bergabung secara instan tanpa perlu mengetik PIN secara manual.',
           icon: Icons.qr_code,
           targetKey: _qrButtonKey,
         ),
         TutorialStep(
-          title: 'Hapus Kelas',
+          title: 'Hapus Data 🗑️',
           description:
-              'Tombol hapus ini akan menghapus kelas beserta semua data terkait. Gunakan dengan hati-hati!',
+              'Gunakan tombol ini untuk menghapus kelas. Perhatian: Tindakan ini juga akan menghapus seluruh rekaman data kelas tersebut.',
           icon: Icons.delete_outline,
           targetKey: _deleteButtonKey,
         ),
@@ -76,9 +78,9 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
 
     steps.add(
       TutorialStep(
-        title: 'Bantuan',
+        title: 'Kendali Penuh 🕹️',
         description:
-            'Tekan tombol bantuan (?) ini kapan saja untuk melihat panduan ini lagi. Selamat mengajar! 🎉',
+            'Gunakan tombol bantuan ini kapan saja jika Anda butuh mengingat cara kerja fitur ini. Selamat mengajar!',
         icon: Icons.help_outline,
         targetKey: _helpButtonKey,
       ),
@@ -720,18 +722,24 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isWizard = context.select(
+      (ThemeCubit cubit) => cubit.state == AppThemeMode.wizard,
+    );
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: isWizard ? Colors.transparent : Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isWizard ? Colors.transparent : Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(
+          color: isWizard ? const Color(0xFFFFD700) : Colors.black87,
+        ),
         title: Text(
           l10n.mcTitle,
-          style: const TextStyle(
-            color: Colors.black87,
+          style: TextStyle(
+            color: isWizard ? const Color(0xFFFFD700) : Colors.black87,
             fontWeight: FontWeight.bold,
+            fontFamily: isWizard ? 'Cinzel' : null,
           ),
         ),
         actions: [

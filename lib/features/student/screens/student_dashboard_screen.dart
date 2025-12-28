@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:alp/l10n/arb/app_localizations.dart';
 import '../../../core/theme/theme_cubit.dart';
 import '../../../core/theme/app_themes.dart';
 import '../../../core/auth/auth_cubit.dart';
-import '../../../core/widgets/app_drawer.dart';
 
 class StudentDashboardScreen extends StatefulWidget {
   const StudentDashboardScreen({super.key});
@@ -15,6 +15,60 @@ class StudentDashboardScreen extends StatefulWidget {
 }
 
 class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
+  void _showLogoutConfirmation(BuildContext context) {
+    final isWizard = context.read<ThemeCubit>().state == AppThemeMode.wizard;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: isWizard ? const Color(0xFF1A1A1A) : Colors.white,
+          title: Text(
+            'Keluar',
+            style: TextStyle(
+              color: isWizard ? const Color(0xFFFFD700) : Colors.black,
+              fontFamily: isWizard ? 'Cinzel' : null,
+            ),
+          ),
+          content: Text(
+            'Apakah Anda yakin ingin keluar?',
+            style: TextStyle(color: isWizard ? Colors.white70 : Colors.black87),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Batal',
+                style: TextStyle(
+                  color: isWizard ? Colors.white54 : Colors.grey[600],
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                context.read<AuthCubit>().logout();
+              },
+              child: const Text(
+                'Keluar Akun',
+                style: TextStyle(color: Colors.blue),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                SystemNavigator.pop();
+              },
+              child: const Text(
+                'Tutup Aplikasi',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showComingSoon(BuildContext context) {
     showDialog(
       context: context,
@@ -33,18 +87,13 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     );
   }
 
-  // Check if running on desktop/wide screen
-  bool _isDesktop(BuildContext context) {
-    return MediaQuery.of(context).size.width > 800;
-  }
-
   @override
   Widget build(BuildContext context) {
     final themeMode = context.select((ThemeCubit cubit) => cubit.state);
     final isPlayful = themeMode == AppThemeMode.playful;
     final isWizard = themeMode == AppThemeMode.wizard;
     final l10n = AppLocalizations.of(context)!;
-    final isDesktop = _isDesktop(context);
+    final isDesktop = MediaQuery.of(context).size.width > 900;
 
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, authState) {
@@ -55,264 +104,24 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         return Scaffold(
           backgroundColor: isWizard ? Colors.transparent : Colors.white,
           appBar: _buildCustomAppBar(context, isPlayful, isWizard, isDesktop),
-          drawer: isDesktop ? null : const AppDrawer(),
-          body: Row(
-            children: [
-              // Permanent navigation rail for desktop
-              if (isDesktop) _buildNavigationRail(context, l10n, isWizard),
-
-              // Main Content
-              Expanded(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: isDesktop ? 1400 : double.infinity,
-                    ),
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isDesktop ? 32 : 0,
-                        vertical: isDesktop ? 24 : 0,
-                      ),
-                      child: isDesktop
-                          ? _buildDesktopLayout(
-                              context,
-                              userName,
-                              l10n,
-                              isWizard,
-                            )
-                          : _buildMobileLayout(
-                              context,
-                              userName,
-                              l10n,
-                              isWizard,
-                            ),
-                    ),
-                  ),
-                ),
+          body: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: isDesktop ? 1400 : double.infinity,
               ),
-            ],
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isDesktop ? 32 : 0,
+                  vertical: isDesktop ? 24 : 0,
+                ),
+                child: isDesktop
+                    ? _buildDesktopLayout(context, userName, l10n, isWizard)
+                    : _buildMobileLayout(context, userName, l10n, isWizard),
+              ),
+            ),
           ),
         );
       },
-    );
-  }
-
-  // Navigation Rail for desktop
-  Widget _buildNavigationRail(
-    BuildContext context,
-    AppLocalizations l10n,
-    bool isWizard,
-  ) {
-    return Container(
-      width: 250,
-      decoration: BoxDecoration(
-        color: isWizard
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.grey[50],
-        border: Border(
-          right: BorderSide(
-            color: isWizard ? Colors.white10 : Colors.grey.shade200,
-          ),
-        ),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 20),
-          // Logo section
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.red[700],
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      bottomLeft: Radius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Sikolah',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.green[700],
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Apps',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          Divider(height: 1, color: isWizard ? Colors.white10 : null),
-          const SizedBox(height: 10),
-          // Navigation items - scrollable
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  _buildNavItem(
-                    context,
-                    Icons.dashboard,
-                    'Dashboard',
-                    isWizard: isWizard,
-                    isSelected: true,
-                    onTap: () {},
-                  ),
-                  _buildNavItem(
-                    context,
-                    Icons.school,
-                    l10n.tileMyCourses,
-                    isWizard: isWizard,
-                    onTap: () => context.push('/student/courses'),
-                  ),
-                  _buildNavItem(
-                    context,
-                    Icons.smart_toy,
-                    l10n.tileAITutor,
-                    isWizard: isWizard,
-                    onTap: () => context.push('/student/ai-tutor'),
-                  ),
-                  _buildNavItem(
-                    context,
-                    Icons.quiz,
-                    'Kuis & Latihan',
-                    isWizard: isWizard,
-                    onTap: () => _showComingSoon(context),
-                  ),
-                  _buildNavItem(
-                    context,
-                    Icons.assignment,
-                    'Tugas',
-                    isWizard: isWizard,
-                    onTap: () => _showComingSoon(context),
-                  ),
-                  _buildNavItem(
-                    context,
-                    Icons.leaderboard,
-                    'Leaderboard',
-                    isWizard: isWizard,
-                    onTap: () => _showComingSoon(context),
-                  ),
-                  _buildNavItem(
-                    context,
-                    Icons.emoji_events,
-                    'Pencapaian',
-                    isWizard: isWizard,
-                    onTap: () => _showComingSoon(context),
-                  ),
-                  _buildNavItem(
-                    context,
-                    Icons.calendar_today,
-                    'Jadwal',
-                    isWizard: isWizard,
-                    onTap: () => _showComingSoon(context),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Divider(height: 1, color: isWizard ? Colors.white10 : null),
-          _buildNavItem(
-            context,
-            Icons.settings,
-            'Pengaturan',
-            isWizard: isWizard,
-            onTap: () => _showComingSoon(context),
-          ),
-          _buildNavItem(
-            context,
-            Icons.logout,
-            'Keluar',
-            isWizard: isWizard,
-            onTap: () {
-              context.read<AuthCubit>().logout();
-            },
-          ),
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(
-    BuildContext context,
-    IconData icon,
-    String label, {
-    bool isSelected = false,
-    required bool isWizard,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? (isWizard
-                      ? Colors.amber.withValues(alpha: 0.1)
-                      : Colors.blue.withAlpha(25))
-                : null,
-            border: Border(
-              left: BorderSide(
-                color: isSelected
-                    ? (isWizard ? const Color(0xFFFFD700) : Colors.blue)
-                    : Colors.transparent,
-                width: 3,
-              ),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                size: 22,
-                color: isSelected
-                    ? (isWizard ? const Color(0xFFFFD700) : Colors.blue)
-                    : (isWizard ? Colors.white70 : Colors.grey[700]),
-              ),
-              const SizedBox(width: 14),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  color: isSelected
-                      ? (isWizard ? const Color(0xFFFFD700) : Colors.blue)
-                      : (isWizard ? Colors.white70 : Colors.grey[800]),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -420,7 +229,27 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           isDesktop: false,
           isWizard: isWizard,
         ),
-        const SizedBox(height: 40),
+        const SizedBox(height: 30),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: ElevatedButton.icon(
+            onPressed: () => _showLogoutConfirmation(context),
+            icon: const Icon(Icons.logout),
+            label: const Text('Keluar Aplikasi'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isWizard
+                  ? Colors.red.withAlpha(200)
+                  : Colors.red,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 2,
+            ),
+          ),
+        ),
+        const SizedBox(height: 60),
       ],
     );
   }
@@ -540,6 +369,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           onPressed: () {
             context.read<ThemeCubit>().toggleTheme();
           },
+        ),
+        IconButton(
+          icon: const Icon(Icons.logout),
+          tooltip: 'Keluar',
+          onPressed: () => _showLogoutConfirmation(context),
         ),
         if (isDesktop) const SizedBox(width: 16),
       ],

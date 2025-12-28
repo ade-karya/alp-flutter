@@ -157,7 +157,7 @@ class NetworkDiscoveryService {
         'id': user.id.toString(),
         'name': user.name,
         'role': user.role.name,
-        'identifier': user.identifier,
+        'identifier': user.identifier ?? '',
         'ip': localIp ?? '',
       },
     );

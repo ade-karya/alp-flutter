@@ -1,0 +1,16 @@
+{
+  "status": "success",
+  "result": [
+    {
+      "projectId": "riau-education",
+      "projectNumber": "83128997767",
+      "displayName": "Riau Education",
+      "name": "projects/riau-education",
+      "resources": {
+        "hostingSite": "riau-education"
+      },
+      "state": "ACTIVE",
+      "etag": "1_d234d033-2c46-4ee6-bc1d-edbfab00e01a"
+    }
+  ]
+}

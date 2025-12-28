@@ -40,7 +40,7 @@ class JoinClassCubit extends Cubit<JoinClassState> {
                 classId: remoteCls['id'] as int,
                 studentId: user.id!,
                 studentName: user.name,
-                studentIdentifier: user.identifier,
+                studentIdentifier: user.identifier ?? '',
               );
 
               if (enrolled) {
@@ -129,7 +129,7 @@ class JoinClassCubit extends Cubit<JoinClassState> {
         classId: cls['id'] as int,
         studentId: user.id!,
         studentName: user.name,
-        studentIdentifier: user.identifier,
+        studentIdentifier: user.identifier ?? '',
       );
 
       if (!enrolled) {
