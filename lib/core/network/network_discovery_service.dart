@@ -251,12 +251,12 @@ class NetworkDiscoveryService {
     if (_broadcast != null) {
       try {
         await _broadcast!.stop();
+        debugPrint('Broadcast stopped');
       } catch (e) {
         debugPrint('Error stopping broadcast: $e');
       }
       _broadcast = null;
     }
-    debugPrint('Broadcast stopped');
   }
 
   Future<void> stopDiscovery() async {
@@ -266,11 +266,11 @@ class NetworkDiscoveryService {
     if (_discovery != null) {
       try {
         await _discovery!.stop();
+        debugPrint('Discovery stopped');
       } catch (e) {
         debugPrint('Error stopping discovery: $e');
       }
       _discovery = null;
     }
-    debugPrint('Discovery stopped');
   }
 }

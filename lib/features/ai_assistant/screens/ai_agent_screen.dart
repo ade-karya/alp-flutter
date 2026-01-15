@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:alp/l10n/arb/app_localizations.dart';
 import '../../../core/theme/theme_cubit.dart';
 import '../../../core/theme/app_themes.dart';
-import '../../../core/theme/wizard_background.dart';
+import '../../../core/theme/theme_helper.dart';
 import '../../../core/auth/auth_cubit.dart';
 import '../../../core/settings/settings_cubit.dart';
 import '../../../core/database/database_helper.dart';
@@ -55,35 +55,32 @@ class _AIAgentScreenState extends State<AIAgentScreen> {
       child: Builder(
         builder: (context) {
           final l10n = AppLocalizations.of(context)!;
-          final isWizard =
-              context.watch<ThemeCubit>().state == AppThemeMode.wizard;
+          final themeMode = context.watch<ThemeCubit>().state;
+          final isForest = themeMode == AppThemeMode.forest;
+          const isWizard = true; // Both themes are dark magical
+          final accentColor = ThemeHelper.getAccentColor(themeMode);
+          final secondaryColor = ThemeHelper.getSecondaryAccentColor(themeMode);
 
           return Scaffold(
-            backgroundColor: isWizard ? Colors.transparent : Colors.grey[50],
+            backgroundColor: Colors.transparent,
             appBar: AppBar(
-              backgroundColor: isWizard ? Colors.transparent : Colors.white,
+              backgroundColor: Colors.transparent,
               elevation: 0,
-              iconTheme: IconThemeData(
-                color: isWizard ? Colors.white : Colors.black87,
-              ),
+              iconTheme: IconThemeData(color: accentColor),
               title: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: isWizard
-                            ? [const Color(0xFF4A148C), const Color(0xFF7B1FA2)]
-                            : [Colors.green[400]!, Colors.green[700]!],
+                        colors: [secondaryColor, secondaryColor.withAlpha(150)],
                       ),
                       borderRadius: BorderRadius.circular(10),
-                      border: isWizard
-                          ? Border.all(color: const Color(0xFFFFD700))
-                          : null,
+                      border: Border.all(color: accentColor),
                     ),
                     child: Icon(
                       Icons.support_agent,
-                      color: isWizard ? const Color(0xFFFFD700) : Colors.white,
+                      color: accentColor,
                       size: 20,
                     ),
                   ),
@@ -91,29 +88,30 @@ class _AIAgentScreenState extends State<AIAgentScreen> {
                   Text(
                     'AI Agent Guru',
                     style: TextStyle(
-                      color: isWizard ? Colors.white : Colors.black87,
+                      color: accentColor,
                       fontWeight: FontWeight.bold,
-                      fontFamily: isWizard ? 'Cinzel' : null,
                     ),
                   ),
                 ],
               ),
               actions: [
                 IconButton(
-                  icon: Icon(
-                    Icons.refresh,
-                    color: isWizard ? const Color(0xFFFFD700) : null,
-                  ),
+                  icon: Icon(isForest ? Icons.forest : Icons.auto_awesome),
+                  tooltip: 'Ganti Tema',
+                  color: accentColor,
+                  onPressed: () => context.read<ThemeCubit>().toggleTheme(),
+                ),
+                IconButton(
+                  icon: Icon(Icons.refresh, color: accentColor),
                   tooltip: 'Bersihkan percakapan',
                   onPressed: () => context.read<AIAgentCubit>().clearHistory(),
                 ),
               ],
             ),
-            body: isWizard
-                ? WizardBackground(
-                    child: _buildChatBody(context, l10n, isWizard),
-                  )
-                : _buildChatBody(context, l10n, isWizard),
+            body: ThemeHelper.wrapWithBackground(
+              themeMode,
+              _buildChatBody(context, l10n, isWizard, themeMode),
+            ),
           );
         },
       ),
@@ -124,6 +122,7 @@ class _AIAgentScreenState extends State<AIAgentScreen> {
     BuildContext context,
     AppLocalizations l10n,
     bool isWizard,
+    AppThemeMode themeMode,
   ) {
     return BlocConsumer<AIAgentCubit, AIAgentState>(
       listener: (context, state) {

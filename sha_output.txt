@@ -1,0 +1,2 @@
+androiddebugkey, Feb 16, 2025, PrivateKeyEntry, 
+Certificate fingerprint (SHA-256): 9B:AE:E9:D6:33:38:9C:0B:6B:99:BD:BB:7A:1D:25:C8:92:7A:54:4F:1C:D1:EF:0D:09:5C:19:C7:3D:2A:F2:FC

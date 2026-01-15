@@ -95,6 +95,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> _checkAuthStatus() async {
     emit(AuthLoading());
+    dev.log('Starting auth status check...', name: 'AuthCubit');
 
     // START PARALLEL TASKS
     // 1. Minimum Splash Duration (1.5s for snappiness)
@@ -116,10 +117,16 @@ class AuthCubit extends Cubit<AuthState> {
 
       final prefs = results[1] as SharedPreferences;
       final hasUsers = results[2] as bool;
+      dev.log(
+        'SharedPreferences loaded, hasUsers: $hasUsers',
+        name: 'AuthCubit',
+      );
 
       // Check onboarding status first
       final onboardingCompleted =
           prefs.getBool(_onboardingCompletedKey) ?? false;
+      dev.log('Onboarding completed: $onboardingCompleted', name: 'AuthCubit');
+
       if (!onboardingCompleted) {
         emit(OnboardingRequired(hasUsers: hasUsers));
         return;
@@ -127,18 +134,48 @@ class AuthCubit extends Cubit<AuthState> {
 
       // Check Firebase auth status
       final firebaseUser = _firebaseAuthService.currentUser;
+      dev.log(
+        'Firebase user: ${firebaseUser?.email ?? "null"}',
+        name: 'AuthCubit',
+      );
+
       if (firebaseUser != null) {
-        // User is signed in with Firebase
-        final userProfile = await _firebaseAuthService.getUserProfile(
-          firebaseUser.uid,
-        );
-        if (userProfile != null) {
-          emit(Authenticated(userProfile));
-        } else {
-          // User is signed in but hasn't completed profile
-          emit(RoleSelectionRequired(firebaseUser));
+        // User is signed in with Firebase - add timeout
+        try {
+          final userProfile = await _firebaseAuthService
+              .getUserProfile(firebaseUser.uid)
+              .timeout(
+                const Duration(seconds: 5),
+                onTimeout: () {
+                  dev.log(
+                    'Firestore timeout, falling back to unauthenticated',
+                    name: 'AuthCubit',
+                  );
+                  return null;
+                },
+              );
+
+          if (userProfile != null) {
+            dev.log(
+              'User profile found: ${userProfile.name}',
+              name: 'AuthCubit',
+            );
+            emit(Authenticated(userProfile));
+          } else {
+            // User is signed in but hasn't completed profile
+            dev.log('No profile, needs role selection', name: 'AuthCubit');
+            emit(RoleSelectionRequired(firebaseUser));
+          }
+        } catch (e) {
+          dev.log('Error getting user profile: $e', name: 'AuthCubit');
+          // Firestore error, emit unauthenticated to allow offline usage
+          emit(Unauthenticated(hasUsers: hasUsers));
         }
       } else {
+        dev.log(
+          'No firebase user, emitting Unauthenticated',
+          name: 'AuthCubit',
+        );
         emit(Unauthenticated(hasUsers: hasUsers));
       }
     } catch (e) {

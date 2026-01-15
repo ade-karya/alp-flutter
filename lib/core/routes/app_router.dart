@@ -52,6 +52,9 @@ GoRouter createAppRouter(AuthCubit authCubit) {
       final authState = authCubit.state;
 
       final path = state.matchedLocation;
+      debugPrint(
+        '[Router] redirect called - path: $path, authState: ${authState.runtimeType}',
+      );
 
       final goingLogin = path == '/login';
       final goingRegister = path == '/register';
@@ -318,8 +321,16 @@ GoRouter createAppRouter(AuthCubit authCubit) {
 
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
+    debugPrint(
+      '[GoRouterRefreshStream] Initialized, triggering initial notify',
+    );
     notifyListeners();
-    _subscription = stream.asBroadcastStream().listen((_) => notifyListeners());
+    _subscription = stream.asBroadcastStream().listen((state) {
+      debugPrint(
+        '[GoRouterRefreshStream] Auth state changed: ${state.runtimeType}',
+      );
+      notifyListeners();
+    });
   }
 
   late final StreamSubscription<dynamic> _subscription;

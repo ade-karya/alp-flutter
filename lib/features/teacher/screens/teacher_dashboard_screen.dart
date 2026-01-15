@@ -84,21 +84,30 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     );
   }
 
-  // Check if running on desktop/wide screen
+  // Check screen layout type
   bool _isDesktop(BuildContext context) {
-    return MediaQuery.of(context).size.width > 800;
+    return MediaQuery.of(context).size.width > 900;
+  }
+
+  bool _isLandscape(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    return size.width > size.height && size.width > 500 && size.width <= 900;
+  }
+
+  bool _isTablet(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    return size.shortestSide >= 600;
   }
 
   @override
   Widget build(BuildContext context) {
-    final isPlayful = context.select(
-      (ThemeCubit cubit) => cubit.state == AppThemeMode.playful,
-    );
-    final isWizard = context.select(
-      (ThemeCubit cubit) => cubit.state == AppThemeMode.wizard,
-    );
+    final themeMode = context.select((ThemeCubit cubit) => cubit.state);
+    final isForest = themeMode == AppThemeMode.forest;
+    const isWizard = true; // Both are dark themes
     final l10n = AppLocalizations.of(context)!;
     final isDesktop = _isDesktop(context);
+    final isLandscape = _isLandscape(context);
+    final isTablet = _isTablet(context);
 
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, authState) {
@@ -106,9 +115,24 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
             ? authState.user.name
             : 'Guru';
 
+        Widget bodyContent;
+        if (isDesktop) {
+          bodyContent = _buildDesktopLayout(context, userName, l10n, isWizard);
+        } else if (isLandscape || isTablet) {
+          bodyContent = _buildLandscapeLayout(
+            context,
+            userName,
+            l10n,
+            isWizard,
+            isTablet,
+          );
+        } else {
+          bodyContent = _buildMobileLayout(context, userName, l10n, isWizard);
+        }
+
         return Scaffold(
-          backgroundColor: isWizard ? Colors.transparent : Colors.white,
-          appBar: _buildCustomAppBar(context, isPlayful, isWizard, isDesktop),
+          backgroundColor: Colors.transparent,
+          appBar: _buildCustomAppBar(context, isForest, isWizard, isDesktop),
           body: Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(
@@ -116,17 +140,91 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
               ),
               child: SingleChildScrollView(
                 padding: EdgeInsets.symmetric(
-                  horizontal: isDesktop ? 32 : 0,
-                  vertical: isDesktop ? 24 : 0,
+                  horizontal: isDesktop ? 32 : (isLandscape ? 16 : 0),
+                  vertical: isDesktop ? 24 : (isLandscape ? 16 : 0),
                 ),
-                child: isDesktop
-                    ? _buildDesktopLayout(context, userName, l10n, isWizard)
-                    : _buildMobileLayout(context, userName, l10n, isWizard),
+                child: bodyContent,
               ),
             ),
           ),
+          floatingActionButton: isDesktop
+              ? null
+              : _buildScanFAB(context, isForest),
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         );
       },
+    );
+  }
+
+  // Landscape layout for Android phones and smaller tablets
+  Widget _buildLandscapeLayout(
+    BuildContext context,
+    String userName,
+    AppLocalizations l10n,
+    bool isWizard,
+    bool isTablet,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHeader(
+          context,
+          userName,
+          isDesktop: false,
+          isWizard: isWizard,
+          isLandscape: true,
+        ),
+        const SizedBox(height: 16),
+        // Two-column layout for landscape
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Left column: Stats and Quick Actions
+            Expanded(
+              flex: 1,
+              child: Column(
+                children: [
+                  _buildInfoCard(
+                    context,
+                    isDesktop: false,
+                    isWizard: isWizard,
+                    isLandscape: true,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildQuickActionsSection(
+                    context,
+                    isDesktop: false,
+                    isWizard: isWizard,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Right column: Services
+            Expanded(
+              flex: isTablet ? 2 : 1,
+              child: _buildServiceGrid(
+                context,
+                l10n,
+                isDesktop: false,
+                isWizard: isWizard,
+                isLandscape: true,
+                isTablet: isTablet,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Banner section spans full width
+        _buildBannerSection(context, isDesktop: false, isWizard: isWizard),
+        const SizedBox(height: 16),
+        _buildTeachingTipsSection(
+          context,
+          isDesktop: false,
+          isWizard: isWizard,
+        ),
+        const SizedBox(height: 40),
+      ],
     );
   }
 
@@ -228,40 +326,14 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           isDesktop: false,
           isWizard: isWizard,
         ),
-        const SizedBox(height: 20),
-        _buildQuickActionsSection(
-          context,
-          isDesktop: false,
-          isWizard: isWizard,
-        ),
-        const SizedBox(height: 30),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: ElevatedButton.icon(
-            onPressed: () => _showLogoutConfirmation(context),
-            icon: const Icon(Icons.logout),
-            label: const Text('Keluar Aplikasi'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isWizard
-                  ? Colors.red.withAlpha(200)
-                  : Colors.red,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 2,
-            ),
-          ),
-        ),
-        const SizedBox(height: 60),
+        const SizedBox(height: 100), // Extra padding for bottom nav
       ],
     );
   }
 
   PreferredSizeWidget _buildCustomAppBar(
     BuildContext context,
-    bool isPlayful,
+    bool isForest,
     bool isWizard,
     bool isDesktop,
   ) {
@@ -366,7 +438,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         ),
         // Toggle theme button for demo
         IconButton(
-          icon: Icon(isWizard ? Icons.auto_awesome : Icons.palette_outlined),
+          icon: Icon(isForest ? Icons.forest : Icons.auto_awesome),
           tooltip: 'Ganti Tema',
           onPressed: () => context.read<ThemeCubit>().toggleTheme(),
         ),
@@ -385,9 +457,12 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     String userName, {
     required bool isDesktop,
     required bool isWizard,
+    bool isLandscape = false,
   }) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : 16.0),
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop || isLandscape ? 0 : 16.0,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -419,11 +494,14 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     BuildContext context, {
     required bool isDesktop,
     required bool isWizard,
+    bool isLandscape = false,
   }) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : 16.0),
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop || isLandscape ? 0 : 16.0,
+      ),
       child: Container(
-        padding: EdgeInsets.all(isDesktop ? 24 : 16),
+        padding: EdgeInsets.all(isDesktop ? 24 : (isLandscape ? 20 : 16)),
         decoration: BoxDecoration(
           color: isWizard ? Colors.black.withValues(alpha: 0.4) : Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -635,7 +713,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           ),
           const SizedBox(height: 16),
           SizedBox(
-            height: 160,
+            height: 120,
             child: Row(
               children: bannerData.map((data) {
                 return Expanded(
@@ -655,53 +733,62 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                           : null,
                     ),
                     child: Stack(
+                      clipBehavior: Clip.hardEdge,
                       children: [
                         Positioned(
-                          right: -20,
-                          bottom: -20,
+                          right: -15,
+                          bottom: -15,
                           child: Icon(
                             data['icon'] as IconData,
-                            size: 100,
+                            size: 70,
                             color: Colors.white.withAlpha(50),
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(14),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                data['title'] as String,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    data['title'] as String,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    data['subtitle'] as String,
+                                    style: TextStyle(
+                                      color: Colors.white.withAlpha(200),
+                                      fontSize: 11,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                data['subtitle'] as String,
-                                style: TextStyle(
-                                  color: Colors.white.withAlpha(200),
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const Spacer(),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
+                                  horizontal: 10,
+                                  vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withAlpha(50),
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Text(
                                   'Lihat',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 12,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -801,6 +888,8 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     AppLocalizations l10n, {
     required bool isDesktop,
     required bool isWizard,
+    bool isLandscape = false,
+    bool isTablet = false,
   }) {
     final services = [
       {
@@ -893,10 +982,14 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isDesktop ? 2 : 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: isDesktop ? 1.5 : 1.1,
+            crossAxisCount: isDesktop
+                ? 3
+                : (isTablet ? 3 : (isLandscape ? 2 : 3)),
+            crossAxisSpacing: isLandscape ? 10 : 12,
+            mainAxisSpacing: isLandscape ? 10 : 12,
+            childAspectRatio: isDesktop
+                ? 1.2
+                : (isTablet ? 0.95 : (isLandscape ? 1.1 : 0.85)),
           ),
           itemCount: services.length,
           itemBuilder: (context, index) {
@@ -957,38 +1050,38 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: color.withAlpha(25),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, color: color, size: 28),
+                  child: Icon(icon, color: color, size: 24),
                 ),
-                const Spacer(),
+                const SizedBox(height: 10),
                 Text(
                   title,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontSize: 14,
                     color: isWizard ? Colors.white : Colors.black87,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   desc,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: isWizard ? Colors.white70 : Colors.grey[600],
                   ),
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -1158,4 +1251,182 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       ),
     );
   }
+
+  // Floating Scan Button
+  Widget _buildScanFAB(BuildContext context, bool isForest) {
+    return Container(
+      height: 70,
+      width: 70,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isForest
+              ? [const Color(0xFF2E7D32), const Color(0xFF1B5E20)]
+              : [const Color(0xFFFFD700), const Color(0xFFFF8C00)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color:
+                (isForest ? const Color(0xFF2E7D32) : const Color(0xFFFFD700))
+                    .withAlpha(150),
+            blurRadius: 20,
+            spreadRadius: 2,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: FloatingActionButton(
+        onPressed: () => _showScanOptions(context),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        shape: const CircleBorder(),
+        child: const Icon(Icons.qr_code_scanner, size: 32, color: Colors.white),
+      ),
+    );
+  }
+
+  void _showScanOptions(BuildContext context) {
+    final isWizard = context.read<ThemeCubit>().state == AppThemeMode.wizard;
+    final isForest = context.read<ThemeCubit>().state == AppThemeMode.forest;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: isWizard ? const Color(0xFF1A1A2E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(
+              color: isForest
+                  ? const Color(0xFF2E7D32).withAlpha(100)
+                  : const Color(0xFFFFD700).withAlpha(100),
+            ),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[400],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Scan & Akses Cepat',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isWizard ? const Color(0xFFFFD700) : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Scan QR code atau pilih akses cepat',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isWizard ? Colors.white54 : Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildScanOption(
+                    context,
+                    icon: Icons.qr_code_scanner,
+                    label: 'Scan Kelas',
+                    color: Colors.blue,
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.go('/teacher/classes');
+                    },
+                    isWizard: isWizard,
+                  ),
+                  _buildScanOption(
+                    context,
+                    icon: Icons.assignment,
+                    label: 'Scan Tugas',
+                    color: Colors.orange,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showComingSoon(context);
+                    },
+                    isWizard: isWizard,
+                  ),
+                  _buildScanOption(
+                    context,
+                    icon: Icons.school,
+                    label: 'Scan Siswa',
+                    color: Colors.green,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showComingSoon(context);
+                    },
+                    isWizard: isWizard,
+                  ),
+                  _buildScanOption(
+                    context,
+                    icon: Icons.book,
+                    label: 'Scan Materi',
+                    color: Colors.purple,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showComingSoon(context);
+                    },
+                    isWizard: isWizard,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildScanOption(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+    required bool isWizard,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: color.withAlpha(25),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: color.withAlpha(50)),
+            ),
+            child: Icon(icon, color: color, size: 28),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: isWizard ? Colors.white70 : Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Bottom Navigation Bar
 }

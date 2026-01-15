@@ -1,18 +1,27 @@
 {
   "project_info": {
     "project_number": "83128997767",
+    "firebase_url": "https://riau-education-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "riau-education",
     "storage_bucket": "riau-education.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:83128997767:android:e625a509328f00b7dc2522",
+        "mobilesdk_app_id": "1:83128997767:android:9257db6042fe27ebdc2522",
         "android_client_info": {
           "package_name": "com.example.alp"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "83128997767-tmi6ojp7sjstmg90rudg5vbb9je9jqvt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.alp",
+            "certificate_hash": "4250d20aaacbc83fb0ca81d9e888f726a8c16f63"
+          }
+        },
         {
           "client_id": "83128997767-2k4m9rrofgt8a9d712m4vt0p0lg511i3.apps.googleusercontent.com",
           "client_type": 3

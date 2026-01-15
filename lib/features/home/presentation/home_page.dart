@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme_cubit.dart';
 import '../../../core/theme/app_themes.dart';
+import '../../../core/theme/theme_helper.dart';
 import '../../../core/auth/auth_cubit.dart';
 import '../../../core/auth/models/user_model.dart';
 
@@ -31,11 +32,12 @@ class HomePage extends StatelessWidget {
         });
 
         // Watch the theme state to rebuild when it changes
-        final isPlayful = context.select(
-          (ThemeCubit cubit) => cubit.state == AppThemeMode.playful,
-        );
+        final themeMode = context.select((ThemeCubit cubit) => cubit.state);
+        final isForest = themeMode == AppThemeMode.forest;
+        final accentColor = ThemeHelper.getAccentColor(themeMode);
 
         return Scaffold(
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
             title: Text('Welcome, ${user.name}'),
             actions: [
@@ -43,18 +45,17 @@ class HomePage extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    isPlayful
-                        ? Icons.sentiment_very_satisfied
-                        : Icons.business_center,
-                    color: Colors.white,
+                    isForest ? Icons.forest : Icons.auto_awesome,
+                    color: accentColor,
                   ),
                   const SizedBox(width: 8),
                   Switch.adaptive(
-                    value: isPlayful,
+                    value: isForest,
                     onChanged: (value) {
                       context.read<ThemeCubit>().toggleTheme();
                     },
-                    activeTrackColor: Colors.orangeAccent,
+                    activeTrackColor: const Color(0xFF4CAF50),
+                    inactiveTrackColor: const Color(0xFF9C27B0),
                   ),
                   const SizedBox(width: 8),
                 ],
@@ -76,31 +77,25 @@ class HomePage extends StatelessWidget {
               const SizedBox(width: 8),
             ],
           ),
-          body: Container(
-            decoration: isPlayful
-                ? const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFFFEF9E7), Color(0xFFF2C94C)],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                  )
-                : null,
-            child: Center(
+          body: ThemeHelper.wrapWithBackground(
+            themeMode,
+            Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   CircleAvatar(
                     radius: 50,
                     backgroundColor: user.role == UserRole.student
-                        ? Colors.blueAccent
-                        : Colors.purpleAccent,
+                        ? accentColor.withAlpha(50)
+                        : ThemeHelper.getSecondaryAccentColor(
+                            themeMode,
+                          ).withAlpha(50),
                     child: Icon(
                       user.role == UserRole.student
                           ? Icons.school
                           : Icons.person_outline,
                       size: 50,
-                      color: Colors.white,
+                      color: accentColor,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -108,6 +103,7 @@ class HomePage extends StatelessWidget {
                     user.name,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -115,12 +111,15 @@ class HomePage extends StatelessWidget {
                     user.role == UserRole.student ? 'Student' : 'Teacher',
                     style: Theme.of(
                       context,
-                    ).textTheme.titleLarge?.copyWith(color: Colors.grey[600]),
+                    ).textTheme.titleLarge?.copyWith(color: Colors.white70),
                   ),
                   const SizedBox(height: 32),
-                  const CircularProgressIndicator(),
+                  CircularProgressIndicator(color: accentColor),
                   const SizedBox(height: 16),
-                  const Text('Redirecting to dashboard...'),
+                  const Text(
+                    'Redirecting to dashboard...',
+                    style: TextStyle(color: Colors.white70),
+                  ),
                 ],
               ),
             ),

@@ -8,7 +8,7 @@ import 'package:alp/features/shared/widgets/language_selector.dart';
 import '../../../core/theme/theme_cubit.dart';
 import '../../../core/theme/app_themes.dart';
 import '../../../core/widgets/wizard_widgets.dart';
-import '../../../core/theme/wizard_background.dart';
+import '../../../core/theme/theme_helper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -34,9 +34,8 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isWizard = context.select(
-      (ThemeCubit cubit) => cubit.state == AppThemeMode.wizard,
-    );
+    final themeMode = context.select((ThemeCubit cubit) => cubit.state);
+    final accentColor = ThemeHelper.getAccentColor(themeMode);
 
     final body = BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
@@ -55,25 +54,20 @@ class _LoginScreenState extends State<LoginScreen> {
             context: context,
             message: state.message,
             isError: true,
-            isWizard: isWizard,
+            isWizard: true, // Both themes are dark/magical
           );
         }
       },
       builder: (context, state) {
         if (state is AuthLoading || _isLoading) {
-          return const Center(
-            child: CircularProgressIndicator(color: Colors.blue),
-          );
+          return Center(child: CircularProgressIndicator(color: accentColor));
         }
 
         return SafeArea(
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // Header with branding
-                _buildHeader(context, l10n, isWizard),
-
-                // Login Section
+                _buildHeader(context, l10n, themeMode),
                 Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: Center(
@@ -82,32 +76,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(32),
                         decoration: BoxDecoration(
-                          color: isWizard
-                              ? Colors.black.withValues(alpha: 0.5)
-                              : Colors.white,
+                          color: ThemeHelper.getCardColor(themeMode),
                           borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withAlpha(isWizard ? 0 : 30),
-                              spreadRadius: 2,
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                          border: isWizard
-                              ? Border.all(color: Colors.white24)
-                              : null,
+                          border: Border.all(
+                            color: ThemeHelper.getBorderColor(themeMode),
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // Title
                             Text(
                               l10n.loginTitle,
                               style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
-                                color: isWizard ? Colors.white : Colors.black87,
+                                color: ThemeHelper.getHeadingColor(themeMode),
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -115,27 +98,17 @@ class _LoginScreenState extends State<LoginScreen> {
                               l10n.welcomeMessage,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: isWizard
-                                    ? Colors.white70
-                                    : Colors.grey[600],
+                                color: ThemeHelper.getBodyColor(themeMode),
                               ),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 48),
-
-                            // Google Sign-In Button
-                            _buildGoogleSignInButton(l10n, isWizard),
+                            _buildGoogleSignInButton(l10n, themeMode),
                             const SizedBox(height: 24),
-
-                            // Divider with text
                             Row(
                               children: [
-                                Expanded(
-                                  child: Divider(
-                                    color: isWizard
-                                        ? Colors.white24
-                                        : Colors.grey[300],
-                                  ),
+                                const Expanded(
+                                  child: Divider(color: Colors.white24),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
@@ -144,36 +117,26 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: Text(
                                     'Secure Login',
                                     style: TextStyle(
-                                      color: isWizard
-                                          ? Colors.white54
-                                          : Colors.grey[500],
+                                      color: ThemeHelper.getSubtleColor(
+                                        themeMode,
+                                      ),
                                       fontSize: 12,
                                     ),
                                   ),
                                 ),
-                                Expanded(
-                                  child: Divider(
-                                    color: isWizard
-                                        ? Colors.white24
-                                        : Colors.grey[300],
-                                  ),
+                                const Expanded(
+                                  child: Divider(color: Colors.white24),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 24),
-
-                            // Info text
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: isWizard
-                                    ? Colors.white.withValues(alpha: 0.05)
-                                    : Colors.blue.withValues(alpha: 0.05),
+                                color: Colors.white.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: isWizard
-                                      ? Colors.white12
-                                      : Colors.blue.withValues(alpha: 0.2),
+                                  color: ThemeHelper.getBorderColor(themeMode),
                                 ),
                               ),
                               child: Row(
@@ -181,9 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Icon(
                                     Icons.info_outline,
                                     size: 20,
-                                    color: isWizard
-                                        ? Colors.amber
-                                        : Colors.blue[600],
+                                    color: accentColor,
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
@@ -191,9 +152,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       'Masuk dengan akun Google untuk menyimpan data secara aman di cloud',
                                       style: TextStyle(
                                         fontSize: 13,
-                                        color: isWizard
-                                            ? Colors.white70
-                                            : Colors.grey[700],
+                                        color: ThemeHelper.getBodyColor(
+                                          themeMode,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -214,12 +175,15 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     return Scaffold(
-      backgroundColor: isWizard ? Colors.transparent : Colors.grey[50],
-      body: isWizard ? WizardBackground(child: body) : body,
+      backgroundColor: Colors.transparent,
+      body: ThemeHelper.wrapWithBackground(themeMode, body),
     );
   }
 
-  Widget _buildGoogleSignInButton(AppLocalizations l10n, bool isWizard) {
+  Widget _buildGoogleSignInButton(
+    AppLocalizations l10n,
+    AppThemeMode themeMode,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -231,9 +195,6 @@ class _LoginScreenState extends State<LoginScreen> {
             offset: const Offset(0, 2),
           ),
         ],
-        border: Border.all(
-          color: isWizard ? Colors.white24 : Colors.grey[300]!,
-        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -245,7 +206,6 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Google Logo
                 Image.network(
                   'https://developers.google.com/identity/images/g-logo.png',
                   width: 24,
@@ -278,18 +238,11 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildHeader(
     BuildContext context,
     AppLocalizations l10n,
-    bool isWizard,
+    AppThemeMode themeMode,
   ) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
-      decoration: BoxDecoration(
-        color: isWizard ? Colors.transparent : Colors.blue[600],
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(40),
-          bottomRight: Radius.circular(40),
-        ),
-      ),
       child: Column(
         children: [
           const Row(
@@ -327,7 +280,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.green[700],
+                  color: themeMode == AppThemeMode.forest
+                      ? const Color(0xFF2E7D32)
+                      : Colors.green[700],
                   borderRadius: const BorderRadius.only(
                     topRight: Radius.circular(12),
                     bottomRight: Radius.circular(12),
@@ -347,10 +302,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 16),
           Text(
             l10n.welcomeMessage,
-            style: TextStyle(
-              color: isWizard ? Colors.white70 : Colors.white,
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
         ],
       ),

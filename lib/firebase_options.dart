@@ -47,30 +47,34 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyDbrMmL2QDivGxoDvMzDDtGQwKx6SCcXS4',
-    appId: '1:83128997767:web:8c742951173ff9e3dc2522',
+    appId: '1:83128997767:web:869d22827265e5ebdc2522',
     messagingSenderId: '83128997767',
     projectId: 'riau-education',
     authDomain: 'riau-education.firebaseapp.com',
+    databaseURL: 'https://riau-education-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'riau-education.firebasestorage.app',
-    measurementId: 'G-LE7VYDWY53',
+    measurementId: 'G-71WRGNTMVV',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyD0fTx2ST8LfwIZSTQ_UiGOqXOF1YEUb_4',
-    appId: '1:83128997767:android:e625a509328f00b7dc2522',
+    appId: '1:83128997767:android:9257db6042fe27ebdc2522',
     messagingSenderId: '83128997767',
     projectId: 'riau-education',
+    databaseURL: 'https://riau-education-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'riau-education.firebasestorage.app',
   );
 
-  // Windows uses Web configuration
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyDbrMmL2QDivGxoDvMzDDtGQwKx6SCcXS4',
-    appId: '1:83128997767:web:8c742951173ff9e3dc2522',
+    appId: '1:83128997767:web:d31440fc98da3e24dc2522',
     messagingSenderId: '83128997767',
     projectId: 'riau-education',
     authDomain: 'riau-education.firebaseapp.com',
+    databaseURL: 'https://riau-education-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'riau-education.firebasestorage.app',
-    measurementId: 'G-LE7VYDWY53',
+    measurementId: 'G-J21K8ML7VM',
   );
+
+  // Windows uses Web configuration
 }

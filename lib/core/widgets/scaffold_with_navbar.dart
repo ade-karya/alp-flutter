@@ -3,11 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../auth/auth_cubit.dart';
 import '../auth/models/user_model.dart';
-import 'fluid_nav_bar/fluid_nav_bar.dart';
 import 'fluid_nav_bar/fluid_icon_data.dart';
 import '../theme/theme_cubit.dart';
 import '../theme/app_themes.dart';
-import '../theme/wizard_background.dart';
+import '../theme/theme_helper.dart';
 
 class ScaffoldWithNavBar extends StatelessWidget {
   final Widget child;
@@ -21,84 +20,31 @@ class ScaffoldWithNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeMode = context.select((ThemeCubit cubit) => cubit.state);
-    final isWizard = themeMode == AppThemeMode.wizard;
     final isDesktop = _isDesktop(context);
 
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, authState) {
         if (authState is! Authenticated) {
-          return isWizard ? WizardBackground(child: child) : child;
+          return ThemeHelper.wrapWithBackground(themeMode, child);
         }
 
         final isStudent = authState.user.role == UserRole.student;
-        final icons = _getIcons(isStudent);
+        _getIcons(isStudent);
         final currentIndex = _calculateSelectedIndex(context, isStudent);
 
         if (isDesktop) {
           return Scaffold(
-            backgroundColor: isWizard ? Colors.transparent : Colors.white,
-            body: isWizard
-                ? WizardBackground(
-                    child: _buildDesktopLayout(
-                      context,
-                      currentIndex,
-                      isStudent,
-                      isWizard,
-                    ),
-                  )
-                : _buildDesktopLayout(
-                    context,
-                    currentIndex,
-                    isStudent,
-                    isWizard,
-                  ),
+            backgroundColor: Colors.transparent,
+            body: ThemeHelper.wrapWithBackground(
+              themeMode,
+              _buildDesktopLayout(context, currentIndex, isStudent, themeMode),
+            ),
           );
         }
 
         return Scaffold(
-          backgroundColor: isWizard ? Colors.transparent : Colors.white,
-          extendBody: true,
-          body: isWizard ? WizardBackground(child: child) : child,
-          bottomNavigationBar: Container(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: isWizard
-                      ? const Color(0xFF9C27B0).withValues(alpha: 0.3)
-                      : Colors.grey.withAlpha(30),
-                  spreadRadius: 0,
-                  blurRadius: 10,
-                  offset: const Offset(0, -4),
-                ),
-              ],
-            ),
-            child: FluidNavBar(
-              icons: icons,
-              selectedIndex: currentIndex,
-              onChange: (index) => _onItemTapped(index, context, isStudent),
-              backgroundColor: isWizard
-                  ? const Color(0xFF4A148C)
-                  : const Color(0xFF00ACC1),
-              gradient: isWizard
-                  ? const LinearGradient(
-                      colors: [
-                        Color(0xFF2E004B),
-                        Color(0xFF4A148C),
-                        Color(0xFF7B1FA2),
-                        Color(0xFFFFD700),
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: [0.0, 0.5, 0.8, 1.0],
-                    )
-                  : null,
-              itemActiveColor: isWizard ? const Color(0xFFFFD700) : null,
-              itemInactiveColor: isWizard ? Colors.white38 : null,
-              itemBackgroundColor: isWizard
-                  ? Colors.black.withValues(alpha: 0.2)
-                  : null,
-            ),
-          ),
+          backgroundColor: Colors.transparent,
+          body: ThemeHelper.wrapWithBackground(themeMode, child),
         );
       },
     );
@@ -108,13 +54,10 @@ class ScaffoldWithNavBar extends StatelessWidget {
     BuildContext context,
     int selectedIndex,
     bool isStudent,
-    bool isWizard,
+    AppThemeMode themeMode,
   ) {
-    final railColor = isWizard
-        ? Colors.white.withValues(alpha: 0.05)
-        : Colors.grey[50];
-    final selectedColor = isWizard ? const Color(0xFFFFD700) : Colors.blue;
-    final unselectedColor = isWizard ? Colors.white70 : Colors.grey[600];
+    final selectedColor = ThemeHelper.getAccentColor(themeMode);
+    const unselectedColor = Colors.white70;
 
     return Row(
       children: [
@@ -122,29 +65,25 @@ class ScaffoldWithNavBar extends StatelessWidget {
           selectedIndex: selectedIndex,
           onDestinationSelected: (index) =>
               _onItemTapped(index, context, isStudent),
-          backgroundColor: railColor,
+          backgroundColor: Colors.white.withValues(alpha: 0.05),
           labelType: NavigationRailLabelType.all,
           selectedIconTheme: IconThemeData(color: selectedColor),
-          unselectedIconTheme: IconThemeData(color: unselectedColor),
+          unselectedIconTheme: const IconThemeData(color: unselectedColor),
           selectedLabelTextStyle: TextStyle(
             color: selectedColor,
             fontWeight: FontWeight.bold,
           ),
-          unselectedLabelTextStyle: TextStyle(color: unselectedColor),
+          unselectedLabelTextStyle: const TextStyle(color: unselectedColor),
           leading: Column(
             children: [
               const SizedBox(height: 20),
-              _buildLogo(isWizard),
+              _buildLogo(themeMode),
               const SizedBox(height: 30),
             ],
           ),
           destinations: _getRailDestinations(isStudent),
         ),
-        VerticalDivider(
-          thickness: 1,
-          width: 1,
-          color: isWizard ? Colors.white10 : Colors.grey[200],
-        ),
+        const VerticalDivider(thickness: 1, width: 1, color: Colors.white10),
         Expanded(
           child: Center(
             child: ConstrainedBox(
@@ -157,7 +96,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
     );
   }
 
-  Widget _buildLogo(bool isWizard) {
+  Widget _buildLogo(AppThemeMode themeMode) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -182,7 +121,9 @@ class ScaffoldWithNavBar extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.green[700],
+            color: themeMode == AppThemeMode.forest
+                ? const Color(0xFF2E7D32)
+                : Colors.green[700],
             borderRadius: const BorderRadius.only(
               topRight: Radius.circular(8),
               bottomRight: Radius.circular(8),

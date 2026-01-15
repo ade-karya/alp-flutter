@@ -90,8 +90,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final themeMode = context.select((ThemeCubit cubit) => cubit.state);
-    final isPlayful = themeMode == AppThemeMode.playful;
-    final isWizard = themeMode == AppThemeMode.wizard;
+    final isForest = themeMode == AppThemeMode.forest;
+    const isWizard = true; // Both are dark themes
     final l10n = AppLocalizations.of(context)!;
     final isDesktop = MediaQuery.of(context).size.width > 900;
 
@@ -102,8 +102,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             : 'Siswa';
 
         return Scaffold(
-          backgroundColor: isWizard ? Colors.transparent : Colors.white,
-          appBar: _buildCustomAppBar(context, isPlayful, isWizard, isDesktop),
+          backgroundColor: Colors.transparent,
+          appBar: _buildCustomAppBar(context, isForest, isWizard, isDesktop),
           body: Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(
@@ -120,6 +120,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               ),
             ),
           ),
+          floatingActionButton: isDesktop
+              ? null
+              : _buildScanFAB(context, isForest),
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         );
       },
     );
@@ -223,40 +227,14 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           isDesktop: false,
           isWizard: isWizard,
         ),
-        const SizedBox(height: 20),
-        _buildQuickActionsSection(
-          context,
-          isDesktop: false,
-          isWizard: isWizard,
-        ),
-        const SizedBox(height: 30),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: ElevatedButton.icon(
-            onPressed: () => _showLogoutConfirmation(context),
-            icon: const Icon(Icons.logout),
-            label: const Text('Keluar Aplikasi'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isWizard
-                  ? Colors.red.withAlpha(200)
-                  : Colors.red,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 2,
-            ),
-          ),
-        ),
-        const SizedBox(height: 60),
+        const SizedBox(height: 100), // Extra padding for bottom nav
       ],
     );
   }
 
   PreferredSizeWidget _buildCustomAppBar(
     BuildContext context,
-    bool isPlayful,
+    bool isForest,
     bool isWizard,
     bool isDesktop,
   ) {
@@ -360,11 +338,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           onPressed: () => _showComingSoon(context),
         ),
         IconButton(
-          icon: Icon(
-            isWizard
-                ? Icons.auto_awesome
-                : (isPlayful ? Icons.pets : Icons.work),
-          ),
+          icon: Icon(isForest ? Icons.forest : Icons.auto_awesome),
           tooltip: 'Tema',
           onPressed: () {
             context.read<ThemeCubit>().toggleTheme();
@@ -1254,4 +1228,182 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       ),
     );
   }
+
+  // Floating Scan Button
+  Widget _buildScanFAB(BuildContext context, bool isForest) {
+    return Container(
+      height: 70,
+      width: 70,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isForest
+              ? [const Color(0xFF2E7D32), const Color(0xFF1B5E20)]
+              : [const Color(0xFFFFD700), const Color(0xFFFF8C00)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color:
+                (isForest ? const Color(0xFF2E7D32) : const Color(0xFFFFD700))
+                    .withAlpha(150),
+            blurRadius: 20,
+            spreadRadius: 2,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: FloatingActionButton(
+        onPressed: () => _showScanOptions(context),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        shape: const CircleBorder(),
+        child: const Icon(Icons.qr_code_scanner, size: 32, color: Colors.white),
+      ),
+    );
+  }
+
+  void _showScanOptions(BuildContext context) {
+    final isWizard = context.read<ThemeCubit>().state == AppThemeMode.wizard;
+    final isForest = context.read<ThemeCubit>().state == AppThemeMode.forest;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: isWizard ? const Color(0xFF1A1A2E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(
+              color: isForest
+                  ? const Color(0xFF2E7D32).withAlpha(100)
+                  : const Color(0xFFFFD700).withAlpha(100),
+            ),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[400],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Scan & Akses Cepat',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isWizard ? const Color(0xFFFFD700) : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Scan QR code atau pilih akses cepat',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isWizard ? Colors.white54 : Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildScanOption(
+                    context,
+                    icon: Icons.qr_code_scanner,
+                    label: 'Gabung Kelas',
+                    color: Colors.blue,
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.go('/student/courses');
+                    },
+                    isWizard: isWizard,
+                  ),
+                  _buildScanOption(
+                    context,
+                    icon: Icons.assignment,
+                    label: 'Lihat Tugas',
+                    color: Colors.orange,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showComingSoon(context);
+                    },
+                    isWizard: isWizard,
+                  ),
+                  _buildScanOption(
+                    context,
+                    icon: Icons.quiz,
+                    label: 'Mulai Kuis',
+                    color: Colors.green,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showComingSoon(context);
+                    },
+                    isWizard: isWizard,
+                  ),
+                  _buildScanOption(
+                    context,
+                    icon: Icons.book,
+                    label: 'Buka Materi',
+                    color: Colors.purple,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showComingSoon(context);
+                    },
+                    isWizard: isWizard,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildScanOption(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+    required bool isWizard,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: color.withAlpha(25),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: color.withAlpha(50)),
+            ),
+            child: Icon(icon, color: color, size: 28),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: isWizard ? Colors.white70 : Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Bottom Navigation Bar
 }

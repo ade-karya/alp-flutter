@@ -1,20 +1,21 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'app_themes.dart'; // Assuming AppThemeMode enum is defined here and updated to include 'wizard'
+import 'app_themes.dart';
 
 class ThemeCubit extends Cubit<AppThemeMode> {
   ThemeCubit() : super(AppThemeMode.wizard); // Default to Wizard
 
+  /// Toggle between Wizard and Forest themes
   void toggleTheme() {
-    if (state == AppThemeMode.serious) {
-      emit(AppThemeMode.playful);
-    } else if (state == AppThemeMode.playful) {
-      emit(AppThemeMode.wizard);
+    if (state == AppThemeMode.wizard) {
+      emit(AppThemeMode.forest);
     } else {
-      emit(AppThemeMode.serious);
+      emit(AppThemeMode.wizard);
     }
   }
 
-  void setSerious() => emit(AppThemeMode.serious);
-  void setPlayful() => emit(AppThemeMode.playful);
   void setWizard() => emit(AppThemeMode.wizard);
+  void setForest() => emit(AppThemeMode.forest);
+
+  bool get isWizard => state == AppThemeMode.wizard;
+  bool get isForest => state == AppThemeMode.forest;
 }

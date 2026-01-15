@@ -8,8 +8,7 @@ import '../../../core/auth/models/user_model.dart';
 import '../../../l10n/arb/app_localizations.dart';
 import 'package:alp/features/shared/widgets/language_selector.dart';
 import '../../../core/theme/theme_cubit.dart';
-import '../../../core/theme/app_themes.dart';
-import '../../../core/theme/wizard_background.dart';
+import '../../../core/theme/theme_helper.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -97,9 +96,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isWizard = context.select(
-      (ThemeCubit cubit) => cubit.state == AppThemeMode.wizard,
-    );
+    final themeMode = context.select((ThemeCubit cubit) => cubit.state);
+    const isWizard = true; // Both themes are dark magical themes
 
     final body = BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
@@ -155,21 +153,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(32),
                         decoration: BoxDecoration(
-                          color: isWizard
-                              ? Colors.black.withValues(alpha: 0.5)
-                              : Colors.white,
+                          color: Colors.black.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
+                          boxShadow: const [
                             BoxShadow(
-                              color: Colors.grey.withAlpha(isWizard ? 0 : 30),
+                              color: Colors.transparent,
                               spreadRadius: 2,
                               blurRadius: 20,
-                              offset: const Offset(0, 8),
+                              offset: Offset(0, 8),
                             ),
                           ],
-                          border: isWizard
-                              ? Border.all(color: Colors.white24)
-                              : null,
+                          border: Border.all(color: Colors.white24),
                         ),
                         child: Form(
                           key: _formKey,
@@ -180,12 +174,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                 _isGoogleSignIn
                                     ? 'Lengkapi Profil Anda'
                                     : 'Buat Akun Baru',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.bold,
-                                  color: isWizard
-                                      ? Colors.white
-                                      : Colors.black87,
+                                  color: Colors.white,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -247,9 +239,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                       _isPinObscured
                                           ? Icons.visibility
                                           : Icons.visibility_off,
-                                      color: isWizard
-                                          ? Colors.white70
-                                          : Colors.grey[600],
+                                      color: Colors.white70,
                                     ),
                                     onPressed: () => setState(
                                       () => _isPinObscured = !_isPinObscured,
@@ -282,9 +272,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                       _isConfirmPinObscured
                                           ? Icons.visibility
                                           : Icons.visibility_off,
-                                      color: isWizard
-                                          ? Colors.white70
-                                          : Colors.grey[600],
+                                      color: Colors.white70,
                                     ),
                                     onPressed: () => setState(
                                       () => _isConfirmPinObscured =
@@ -323,8 +311,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
 
     return Scaffold(
-      backgroundColor: isWizard ? Colors.transparent : Colors.grey[50],
-      body: isWizard ? WizardBackground(child: body) : body,
+      backgroundColor: Colors.transparent,
+      body: ThemeHelper.wrapWithBackground(themeMode, body),
     );
   }
 
@@ -626,8 +614,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   Widget _buildLoginLink(AppLocalizations l10n, bool isWizard) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         Text(
           'Sudah punya akun? ',

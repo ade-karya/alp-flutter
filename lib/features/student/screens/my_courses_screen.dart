@@ -43,15 +43,37 @@ class _MyCoursesScreenState extends State<_MyCoursesView> {
   }
 
   Future<void> _loadCourses() async {
-    final user = (context.read<AuthCubit>().state as Authenticated).user;
-    if (user.id == null) return;
+    try {
+      final user = (context.read<AuthCubit>().state as Authenticated).user;
+      if (user.id == null) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+        return;
+      }
 
-    final courses = await DatabaseHelper.instance.getStudentClasses(user.id!);
-    if (mounted) {
-      setState(() {
-        _courses = courses;
-        _isLoading = false;
-      });
+      final courses = await DatabaseHelper.instance.getStudentClasses(user.id!);
+      if (mounted) {
+        setState(() {
+          _courses = courses;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading courses: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memuat kursus: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -88,7 +110,6 @@ class _MyCoursesScreenState extends State<_MyCoursesView> {
             TextField(
               controller: pinController,
               decoration: InputDecoration(
-                labelText: l10n.mcEnterPinLabel,
                 hintText: '123456',
                 prefixIcon: const Icon(Icons.pin),
                 border: OutlineInputBorder(
@@ -96,6 +117,7 @@ class _MyCoursesScreenState extends State<_MyCoursesView> {
                 ),
                 filled: true,
                 fillColor: Colors.grey[50],
+                contentPadding: const EdgeInsets.symmetric(vertical: 16),
               ),
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,

@@ -4,7 +4,7 @@ import '../../../core/database/database_helper.dart';
 import '../../../core/auth/auth_cubit.dart';
 import '../../../core/theme/theme_cubit.dart';
 import '../../../core/theme/app_themes.dart';
-import '../../../core/theme/wizard_background.dart';
+import '../../../core/theme/theme_helper.dart';
 
 class TeacherReportsScreen extends StatefulWidget {
   const TeacherReportsScreen({super.key});
@@ -38,29 +38,25 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isWizard = context.watch<ThemeCubit>().state == AppThemeMode.wizard;
+    final themeMode = context.watch<ThemeCubit>().state;
+    final isForest = themeMode == AppThemeMode.forest;
+    final accentColor = ThemeHelper.getAccentColor(themeMode);
 
     Widget buildContent() {
       if (_isLoading) {
-        return const Center(child: CircularProgressIndicator());
+        return Center(child: CircularProgressIndicator(color: accentColor));
       }
 
       if (_classes.isEmpty) {
-        return Center(
+        return const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.assessment_outlined,
-                size: 64,
-                color: isWizard ? Colors.white54 : Colors.grey,
-              ),
-              const SizedBox(height: 16),
+              Icon(Icons.assessment_outlined, size: 64, color: Colors.white54),
+              SizedBox(height: 16),
               Text(
                 'Belum ada data kelas.',
-                style: TextStyle(
-                  color: isWizard ? Colors.white70 : Colors.grey[600],
-                ),
+                style: TextStyle(color: Colors.white70),
               ),
             ],
           ),
@@ -73,21 +69,25 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen> {
         itemBuilder: (context, index) {
           final cls = _classes[index];
           return Card(
-            color: isWizard ? Colors.black.withValues(alpha: 0.4) : null,
+            color: ThemeHelper.getCardColor(themeMode),
             margin: const EdgeInsets.only(bottom: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: ThemeHelper.getBorderColor(themeMode)),
+            ),
             child: ListTile(
               title: Text(
                 cls['name'],
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: isWizard ? Colors.white : null,
+                  color: Colors.white,
                 ),
               ),
               subtitle: Text(
                 'PIN: ${cls['class_pin']}',
-                style: TextStyle(color: isWizard ? Colors.white70 : null),
+                style: const TextStyle(color: Colors.white70),
               ),
-              trailing: const Icon(Icons.chevron_right),
+              trailing: Icon(Icons.chevron_right, color: accentColor),
               onTap: () {
                 // Future: Detailed report for class
               },
@@ -98,13 +98,24 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: isWizard ? Colors.transparent : Colors.white,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Laporan Hasil Belajar'),
-        backgroundColor: isWizard ? Colors.transparent : null,
+        title: Text(
+          'Laporan Hasil Belajar',
+          style: TextStyle(color: accentColor),
+        ),
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: IconThemeData(color: accentColor),
+        actions: [
+          IconButton(
+            icon: Icon(isForest ? Icons.forest : Icons.auto_awesome),
+            tooltip: 'Ganti Tema',
+            onPressed: () => context.read<ThemeCubit>().toggleTheme(),
+          ),
+        ],
       ),
-      body: isWizard ? WizardBackground(child: buildContent()) : buildContent(),
+      body: ThemeHelper.wrapWithBackground(themeMode, buildContent()),
     );
   }
 }
