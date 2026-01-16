@@ -1,6 +1,7 @@
 # Project-level configuration.
-# Allow older Firebase SDK CMake files that specify versions < 3.5
-set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+# Allow older Firebase SDK CMake files that specify older versions
+# Set to 3.10 to suppress deprecation warnings from Firebase C++ SDK
+set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
 cmake_minimum_required(VERSION 3.14)
 project(alp LANGUAGES CXX)
 

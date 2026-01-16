@@ -887,7 +887,7 @@ Return ONLY a valid JSON array with this exact structure, no other text:
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _generatedQuestions.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (ctx, i) {
               final q = _generatedQuestions[i];
               return Container(
