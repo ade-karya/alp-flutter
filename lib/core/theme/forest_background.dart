@@ -65,19 +65,19 @@ class _ForestBackgroundState extends State<ForestBackground>
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Deep Forest Gradient Background
+        // Fresh & Modern Light Gradient Background
         Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Color(0xFF0D260D), // Deep forest floor
-                Color(0xFF1B3D1B), // Dark forest
-                Color(0xFF2D5A27), // Forest canopy
-                Color(0xFF1B3D1B), // Dark forest
+                Color(0xFFFFFFFF), // White top
+                Color(0xFFF1F8E9), // Light Green 50
+                Color(0xFFDCEDC8), // Light Green 100
+                Color(0xFFA5D6A7), // Green 200
               ],
-              stops: [0.0, 0.3, 0.6, 1.0],
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
+              stops: [0.0, 0.4, 0.7, 1.0],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
         ),
@@ -107,19 +107,19 @@ class _ForestBackgroundState extends State<ForestBackground>
           },
         ),
 
-        // Mist/Fog overlay at bottom
+        // Subtle gradient overlay at bottom
         Positioned(
           bottom: 0,
           left: 0,
           right: 0,
-          height: 200,
+          height: 150,
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF1B3D1B).withValues(alpha: 0.0),
-                  const Color(0xFF1B3D1B).withValues(alpha: 0.3),
-                  const Color(0xFF1B3D1B).withValues(alpha: 0.5),
+                  Colors.white.withValues(alpha: 0.0),
+                  Colors.white.withValues(alpha: 0.5),
+                  Colors.white.withValues(alpha: 0.8),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -197,20 +197,23 @@ class FireflyPainter extends CustomPainter {
               cos(animationValue * 2 * pi * 0.5 + firefly.pulsePhase) * 0.02) %
           1.0;
 
-      // Outer glow
+      // Subtle floating particle
       final glowPaint = Paint()
-        ..color = const Color(0xFFAEFF6E).withValues(alpha: opacity * 0.3)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+        ..color = const Color(0xFFC6FF00)
+            .withValues(alpha: opacity * 0.4) // Lime glow
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
 
       canvas.drawCircle(
         Offset(xPos * size.width, yPos * size.height),
-        firefly.size * 3,
+        firefly.size * 2,
         glowPaint,
       );
 
-      // Inner bright core
+      // Soft teal core
       final corePaint = Paint()
-        ..color = const Color(0xFFE8FFD0).withValues(alpha: opacity);
+        ..color = const Color(
+          0xFFAEEA00,
+        ).withValues(alpha: opacity * 0.6); // Yellow-Green core
 
       canvas.drawCircle(
         Offset(xPos * size.width, yPos * size.height),
@@ -233,7 +236,9 @@ class LeafPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF4CAF50).withValues(alpha: 0.15);
+      ..color = const Color(
+        0xFF66BB6A,
+      ).withValues(alpha: 0.3); // Fresh leaf green
 
     for (var leaf in leaves) {
       // Falling and swaying movement
@@ -265,7 +270,8 @@ class TreeSilhouettePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF0D260D).withValues(alpha: 0.3)
+      ..color = const Color(0xFF81C784)
+          .withValues(alpha: 0.25) // Subtle green trees
       ..style = PaintingStyle.fill;
 
     // Draw subtle tree silhouettes at the bottom

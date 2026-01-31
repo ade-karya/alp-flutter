@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_cubit.dart';
 import '../../../core/database/database_helper.dart';
-import '../../../core/network/network_cubit.dart';
+import '../../../core/network/network_cubit_v2.dart';
 import '../../../core/network/sync_client.dart';
 
 class ExamScreen extends StatefulWidget {
@@ -122,7 +122,7 @@ class _ExamScreenState extends State<ExamScreen> {
       String feedbackMessage = 'Disimpan di HP saja (Offline).';
 
       if (mounted) {
-        final networkCubit = context.read<NetworkCubit>();
+        final networkCubit = context.read<NetworkCubitV2>();
         final teacherPeers = networkCubit.getTeacherPeers();
 
         for (final peer in teacherPeers) {

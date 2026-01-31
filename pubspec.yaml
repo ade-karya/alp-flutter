@@ -77,7 +77,6 @@ dependencies:
   permission_handler: ^12.0.1
   qr_flutter: ^4.1.0
   mobile_scanner: ^7.1.3
-  speech_to_text: ^7.3.0
   
   # Gemini Live API (WebSocket for text streaming)
   web_socket_channel: ^3.0.3
@@ -90,6 +89,7 @@ dependencies:
   
   # Desktop OAuth (for Windows Google Sign-In)
   url_launcher: ^6.2.1
+  window_manager: ^0.5.1
 
 dev_dependencies:
   flutter_test:

@@ -6,9 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:alp/l10n/arb/app_localizations.dart';
 import '../../../core/auth/auth_cubit.dart';
 import '../../../core/database/database_helper.dart';
-import '../../../core/network/network_cubit.dart';
+import '../../../core/network/network_cubit_v2.dart';
 import '../cubit/join_class_cubit.dart';
 import '../cubit/join_class_state.dart';
+import '../../../core/theme/theme_cubit.dart';
+import '../../../core/theme/app_themes.dart';
 
 class MyCoursesScreen extends StatelessWidget {
   const MyCoursesScreen({super.key});
@@ -17,7 +19,7 @@ class MyCoursesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => JoinClassCubit(
-        networkCubit: context.read<NetworkCubit>(),
+        networkCubit: context.read<NetworkCubitV2>(),
         user: (context.read<AuthCubit>().state as Authenticated).user,
       ),
       child: const _MyCoursesView(),
@@ -219,66 +221,84 @@ class _MyCoursesScreenState extends State<_MyCoursesView> {
           );
         }
       },
-      child: Scaffold(
-        backgroundColor: Colors.grey[50],
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          iconTheme: const IconThemeData(color: Colors.black87),
-          title: Text(
-            l10n.mcCoursesTitle,
-            style: const TextStyle(
-              color: Colors.black87,
-              fontWeight: FontWeight.bold,
+      child: Builder(
+        builder: (context) {
+          final themeMode = context.watch<ThemeCubit>().state;
+          final isWizard = themeMode == AppThemeMode.wizard;
+
+          return Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              leading: IconButton(
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: isWizard ? Colors.white : Colors.black87,
+                ),
+                onPressed: () => context.go('/student/dashboard'),
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              iconTheme: IconThemeData(
+                color: isWizard ? Colors.white : Colors.black87,
+              ),
+              title: Text(
+                l10n.mcCoursesTitle,
+                style: TextStyle(
+                  color: isWizard ? Colors.white : Colors.black87,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _loadCourses,
+                ),
+              ],
             ),
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _loadCourses,
-            ),
-          ],
-        ),
-        body: Stack(
-          children: [
-            _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Colors.blue),
-                  )
-                : _courses.isEmpty
-                ? _buildEmptyState(l10n)
-                : _buildCourseList(l10n),
-            // Loading Overlay
-            BlocBuilder<JoinClassCubit, JoinClassState>(
-              builder: (context, state) {
-                if (state is JoinClassLoading) {
-                  return Container(
-                    color: Colors.black54,
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
+            body: Stack(
+              children: [
+                _isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(color: Colors.blue),
+                      )
+                    : _courses.isEmpty
+                    ? _buildEmptyState(l10n)
+                    : _buildCourseList(l10n),
+                // Loading Overlay
+                BlocBuilder<JoinClassCubit, JoinClassState>(
+                  builder: (context, state) {
+                    if (state is JoinClassLoading) {
+                      return Container(
+                        color: Colors.black54,
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                CircularProgressIndicator(color: Colors.blue),
+                                SizedBox(height: 16),
+                                Text('Bergabung ke kelas...'),
+                              ],
+                            ),
+                          ),
                         ),
-                        child: const Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            CircularProgressIndicator(color: Colors.blue),
-                            SizedBox(height: 16),
-                            Text('Bergabung ke kelas...'),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
-        bottomNavigationBar: _courses.isEmpty ? null : _buildBottomBar(context),
+            bottomNavigationBar: _courses.isEmpty
+                ? null
+                : _buildBottomBar(context),
+          );
+        },
       ),
     );
   }

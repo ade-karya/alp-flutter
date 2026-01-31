@@ -109,9 +109,9 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
     }
 
     return Scaffold(
-      backgroundColor: isWizard ? Colors.transparent : Colors.grey[50],
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: isWizard ? Colors.transparent : Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: IconThemeData(
           color: isWizard ? Colors.white : Colors.black87,

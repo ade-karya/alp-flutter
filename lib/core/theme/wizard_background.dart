@@ -48,14 +48,14 @@ class _WizardBackgroundState extends State<WizardBackground>
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Deep Gradient Background
+        // Ultra-dark gradient background for night mode (minimal eye strain)
         Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Color(0xFF0F0C29), // Deepest Navy
-                Color(0xFF302B63), // Purple Navy
-                Color(0xFF24243E), // Dark Slate
+                Color(0xFF050510), // Almost black with slight purple
+                Color(0xFF0A0A1A), // Very deep navy
+                Color(0xFF0F0F25), // Dark slate purple
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
@@ -108,10 +108,14 @@ class StarPainter extends CustomPainter {
     final paint = Paint()..color = Colors.white;
 
     for (var star in stars) {
-      // Twinkle effect
+      // Softer twinkle effect for night mode
       final opacity =
-          (star.opacity + sin(animationValue * 2 * pi * star.speed)) / 2 + 0.3;
-      paint.color = Colors.white.withValues(alpha: opacity.clamp(0.0, 1.0));
+          (star.opacity * 0.5 +
+              sin(animationValue * 2 * pi * star.speed) * 0.2) +
+          0.15;
+      paint.color = const Color(
+        0xFFD4AF37,
+      ).withValues(alpha: (opacity * 0.6).clamp(0.0, 0.7));
 
       // Gentle movement
       final yPos = (star.y + animationValue * star.speed) % 1.0;

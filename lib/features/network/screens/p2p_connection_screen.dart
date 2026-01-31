@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../core/network/network_cubit.dart';
+import '../../../core/network/network_cubit_v2.dart';
 import '../../../core/network/network_discovery_service.dart';
 import '../../../core/network/sync_client.dart';
 import '../../../core/auth/auth_cubit.dart';
@@ -57,7 +57,7 @@ class _P2PConnectionScreenState extends State<P2PConnectionScreen> {
   }
 
   void _checkServerStatus() {
-    final networkCubit = context.read<NetworkCubit>();
+    final networkCubit = context.read<NetworkCubitV2>();
     setState(() => _isServerActive = networkCubit.isServerRunning);
   }
 
@@ -72,7 +72,7 @@ class _P2PConnectionScreenState extends State<P2PConnectionScreen> {
 
     try {
       debugPrint('Starting server...');
-      await context.read<NetworkCubit>().start(authState.user);
+      await context.read<NetworkCubitV2>().start(authState.user);
       await _loadNetworkInterfaces();
       _checkServerStatus();
 
@@ -90,7 +90,7 @@ class _P2PConnectionScreenState extends State<P2PConnectionScreen> {
   }
 
   Future<void> _stopServer() async {
-    await context.read<NetworkCubit>().stop();
+    await context.read<NetworkCubitV2>().stop();
     _checkServerStatus();
     _showMessage('Server dinonaktifkan');
   }
@@ -121,7 +121,7 @@ class _P2PConnectionScreenState extends State<P2PConnectionScreen> {
 
         if (isAlive) {
           // Add to peer list
-          await context.read<NetworkCubit>().addManualPeer(ip);
+          await context.read<NetworkCubitV2>().addManualPeer(ip);
         }
       }
     } catch (e) {

@@ -9,6 +9,7 @@ import '../../../l10n/arb/app_localizations.dart';
 import 'package:alp/features/shared/widgets/language_selector.dart';
 import '../../../core/theme/theme_cubit.dart';
 import '../../../core/theme/theme_helper.dart';
+import '../../../core/theme/app_themes.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -97,7 +98,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final themeMode = context.select((ThemeCubit cubit) => cubit.state);
-    const isWizard = true; // Both themes are dark magical themes
+    final isWizard = themeMode == AppThemeMode.wizard;
 
     final body = BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
@@ -153,7 +154,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(32),
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.5),
+                          color: isWizard
+                              ? Colors.black.withValues(alpha: 0.5)
+                              : Colors.white.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: const [
                             BoxShadow(
@@ -163,7 +166,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               offset: Offset(0, 8),
                             ),
                           ],
-                          border: Border.all(color: Colors.white24),
+                          border: Border.all(
+                            color: isWizard
+                                ? Colors.white24
+                                : Colors.grey.withAlpha(50),
+                          ),
                         ),
                         child: Form(
                           key: _formKey,
@@ -174,10 +181,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                 _isGoogleSignIn
                                     ? 'Lengkapi Profil Anda'
                                     : 'Buat Akun Baru',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: isWizard ? Colors.white : Colors.black,
                                 ),
                                 textAlign: TextAlign.center,
                               ),

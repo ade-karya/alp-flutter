@@ -1,6 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:window_manager/window_manager.dart';
 import 'core/routes/app_router.dart';
 import 'core/theme/app_themes.dart';
 import 'core/theme/theme_cubit.dart';
@@ -11,9 +13,11 @@ import 'core/auth/firebase_auth_service.dart';
 import 'core/database/database_helper.dart';
 import 'package:alp/l10n/arb/app_localizations.dart';
 import 'core/network/network_discovery_service.dart';
+import 'core/network/network_cubit_v2.dart';
+import 'core/network/firebase_sync_service.dart';
 import 'dart:ui';
+import 'dart:io' show Platform;
 import 'package:go_router/go_router.dart';
-import 'core/network/network_cubit.dart';
 import 'firebase_options.dart';
 import 'package:flutter/foundation.dart'; // For platform checks
 import 'core/services/db_initializer.dart'; // Conditional import
@@ -23,6 +27,23 @@ void main() async {
 
   // Initialize Database (FFI for Desktop, No-op for Web)
   await initializeDatabase();
+
+  // Initialize WindowManager for desktop platforms
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    await windowManager.ensureInitialized();
+    WindowOptions windowOptions = const WindowOptions(
+      size: Size(1280, 720),
+      minimumSize: Size(800, 600),
+      center: true,
+      backgroundColor: Colors.transparent,
+      skipTaskbar: false,
+      titleBarStyle: TitleBarStyle.normal,
+    );
+    await windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
+  }
 
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -72,6 +93,14 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
+/// Handles F11 keypress to toggle fullscreen on desktop platforms
+Future<void> _toggleFullscreen() async {
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    final isFullScreen = await windowManager.isFullScreen();
+    await windowManager.setFullScreen(!isFullScreen);
+  }
+}
+
 class _MyAppState extends State<MyApp> {
   GoRouter? _router;
 
@@ -93,7 +122,10 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
           BlocProvider(
-            create: (context) => NetworkCubit(NetworkDiscoveryService()),
+            create: (context) => NetworkCubitV2(
+              NetworkDiscoveryService(),
+              FirebaseSyncService(),
+            ),
           ),
         ],
         child: Builder(
@@ -103,7 +135,7 @@ class _MyAppState extends State<MyApp> {
 
             return BlocListener<AuthCubit, AuthState>(
               listener: (context, authState) {
-                final networkCubit = context.read<NetworkCubit>();
+                final networkCubit = context.read<NetworkCubitV2>();
                 if (authState is Authenticated) {
                   networkCubit.start(authState.user);
                 } else if (authState is Unauthenticated) {
@@ -123,16 +155,27 @@ class _MyAppState extends State<MyApp> {
                       builder: (context, settingsState) {
                         return BlocBuilder<ThemeCubit, AppThemeMode>(
                           builder: (context, themeMode) {
-                            return MaterialApp.router(
-                              onGenerateTitle: (context) =>
-                                  AppLocalizations.of(context)!.appTitle,
-                              theme: AppThemes.getTheme(themeMode),
-                              locale: Locale(settingsState.locale),
-                              localizationsDelegates:
-                                  AppLocalizations.localizationsDelegates,
-                              supportedLocales:
-                                  AppLocalizations.supportedLocales,
-                              routerConfig: _router!,
+                            return KeyboardListener(
+                              focusNode: FocusNode(),
+                              autofocus: true,
+                              onKeyEvent: (event) {
+                                if (event is KeyDownEvent &&
+                                    event.logicalKey ==
+                                        LogicalKeyboardKey.f11) {
+                                  _toggleFullscreen();
+                                }
+                              },
+                              child: MaterialApp.router(
+                                onGenerateTitle: (context) =>
+                                    AppLocalizations.of(context)!.appTitle,
+                                theme: AppThemes.getTheme(themeMode),
+                                locale: Locale(settingsState.locale),
+                                localizationsDelegates:
+                                    AppLocalizations.localizationsDelegates,
+                                supportedLocales:
+                                    AppLocalizations.supportedLocales,
+                                routerConfig: _router!,
+                              ),
                             );
                           },
                         );

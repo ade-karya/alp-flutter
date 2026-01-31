@@ -8,6 +8,8 @@ import '../../../core/auth/auth_cubit.dart';
 import '../../../core/database/database_helper.dart';
 import '../../../core/models/ai_provider.dart';
 import '../models/question_model.dart';
+import '../../../core/theme/theme_cubit.dart';
+import '../../../core/theme/app_themes.dart';
 
 enum ContentType { lessonPlan, multipleChoice, essay }
 
@@ -378,16 +380,21 @@ Return ONLY a valid JSON array with this exact structure, no other text:
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final themeMode = context.watch<ThemeCubit>().state;
+    final isWizard = themeMode == AppThemeMode.wizard;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(
+          color: isWizard ? Colors.white : Colors.black87,
+        ),
         title: Text(
           l10n.ccTitle,
-          style: const TextStyle(
-            color: Colors.black87,
+          style: TextStyle(
+            color: isWizard ? Colors.white : Colors.black87,
             fontWeight: FontWeight.bold,
           ),
         ),

@@ -32,10 +32,22 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
   Future<void> _updatePin() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final l10n = AppLocalizations.of(context)!;
+
+    // Verify that new PIN and confirm PIN match
+    if (_newPinController.text != _confirmPinController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.errorMatchPIN),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
-      final l10n = AppLocalizations.of(context)!;
       final authCubit = context.read<AuthCubit>();
 
       final success = await authCubit.updatePin(

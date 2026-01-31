@@ -24,11 +24,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    final authState = context.read<AuthCubit>().state;
-    if (authState is Authenticated) {
-      _nameController.text = authState.user.name;
-      _selectedDate = authState.user.dateOfBirth;
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final authState = context.read<AuthCubit>().state;
+        if (authState is Authenticated) {
+          _nameController.text = authState.user.name;
+          _selectedDate = authState.user.dateOfBirth;
+        }
+      }
+    });
   }
 
   @override

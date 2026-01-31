@@ -9,7 +9,7 @@ import '../../../core/auth/auth_cubit.dart';
 import '../../../core/database/database_helper.dart';
 import '../../../core/widgets/feature_tutorial.dart';
 import '../models/class_model.dart';
-import '../../../core/network/network_cubit.dart';
+import '../../../core/network/network_cubit_v2.dart';
 import '../../../core/theme/theme_cubit.dart';
 import '../../../core/theme/app_themes.dart';
 
@@ -148,10 +148,35 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
   }
 
   Future<void> _createClass(String name, String description) async {
-    final l10n = AppLocalizations.of(context)!;
+    if (!mounted) return;
+
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Localization error'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     final authState = context.read<AuthCubit>().state;
     if (authState is! Authenticated) return;
     final user = authState.user;
+
+    // Check if user ID exists
+    if (user.id == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.mcErrorCreating('User ID tidak ditemukan')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
 
     final rng = Random();
     String pin = '';
@@ -390,7 +415,7 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
           return StatefulBuilder(
             builder: (context, setState) {
               try {
-                final networkCubit = context.watch<NetworkCubit>();
+                final networkCubit = context.watch<NetworkCubitV2>();
                 String? serverIp = networkCubit.serverIp;
                 final interfaces = networkCubit.availableInterfaces;
 
@@ -727,9 +752,9 @@ class _ManageClassScreenState extends State<ManageClassScreen> {
     );
 
     return Scaffold(
-      backgroundColor: isWizard ? Colors.transparent : Colors.grey[50],
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: isWizard ? Colors.transparent : Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: IconThemeData(
           color: isWizard ? const Color(0xFFFFD700) : Colors.black87,

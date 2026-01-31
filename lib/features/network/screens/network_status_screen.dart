@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../core/network/network_cubit.dart';
+import '../../../core/network/network_cubit_v2.dart';
 import '../../../core/network/network_permission_service.dart';
 import '../../../core/auth/auth_cubit.dart';
 import '../../../core/widgets/app_drawer.dart';
@@ -48,7 +48,7 @@ class _NetworkStatusScreenState extends State<NetworkStatusScreen> {
       }
 
       if (!mounted) return;
-      final cubit = context.read<NetworkCubit>();
+      final cubit = context.read<NetworkCubitV2>();
       await cubit.start(authState.user);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -120,7 +120,7 @@ class _NetworkStatusScreenState extends State<NetworkStatusScreen> {
   }
 
   Future<void> _deactivateNetwork() async {
-    await context.read<NetworkCubit>().stop();
+    await context.read<NetworkCubitV2>().stop();
     if (mounted) {
       ScaffoldMessenger.of(
         context,
@@ -191,7 +191,9 @@ class _NetworkStatusScreenState extends State<NetworkStatusScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text('Menghubungkan ke $result...')));
 
-      final success = await context.read<NetworkCubit>().addManualPeer(result);
+      final success = await context.read<NetworkCubitV2>().addManualPeer(
+        result,
+      );
 
       if (mounted) {
         if (success) {
@@ -217,7 +219,7 @@ class _NetworkStatusScreenState extends State<NetworkStatusScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Status Jaringan')),
       drawer: const AppDrawer(),
-      floatingActionButton: BlocBuilder<NetworkCubit, NetworkState>(
+      floatingActionButton: BlocBuilder<NetworkCubitV2, NetworkState>(
         builder: (context, state) {
           if (state is NetworkScanning) {
             return FloatingActionButton.extended(
@@ -230,9 +232,9 @@ class _NetworkStatusScreenState extends State<NetworkStatusScreen> {
           return const SizedBox.shrink();
         },
       ),
-      body: BlocBuilder<NetworkCubit, NetworkState>(
+      body: BlocBuilder<NetworkCubitV2, NetworkState>(
         builder: (context, state) {
-          final networkCubit = context.read<NetworkCubit>();
+          final networkCubit = context.read<NetworkCubitV2>();
 
           // Handle Initial and Disabled states
           if (state is NetworkInitial || state is NetworkDisabled) {

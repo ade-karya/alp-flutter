@@ -57,7 +57,7 @@ class _AIAgentScreenState extends State<AIAgentScreen> {
           final l10n = AppLocalizations.of(context)!;
           final themeMode = context.watch<ThemeCubit>().state;
           final isForest = themeMode == AppThemeMode.forest;
-          const isWizard = true; // Both themes are dark magical
+          final isWizard = themeMode == AppThemeMode.wizard;
           final accentColor = ThemeHelper.getAccentColor(themeMode);
           final secondaryColor = ThemeHelper.getSecondaryAccentColor(themeMode);
 
@@ -480,12 +480,7 @@ class _AIAgentScreenState extends State<AIAgentScreen> {
                                 : Colors.grey[700]),
                     ),
                     onPressed: () {
-                      final cubit = context.read<AIAgentCubit>();
-                      if (status == AIAgentStatus.listening) {
-                        cubit.stopListening();
-                      } else {
-                        cubit.startListening();
-                      }
+                      // Speech to text functionality has been removed
                     },
                   ),
                 ),

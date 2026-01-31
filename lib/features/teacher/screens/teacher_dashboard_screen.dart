@@ -1,5 +1,5 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:alp/l10n/arb/app_localizations.dart';
@@ -53,7 +53,8 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
             ),
             TextButton(
               onPressed: () {
-                SystemNavigator.pop();
+                Navigator.pop(context);
+                exit(0);
               },
               child: const Text(
                 'Tutup Aplikasi',
@@ -103,7 +104,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   Widget build(BuildContext context) {
     final themeMode = context.select((ThemeCubit cubit) => cubit.state);
     final isForest = themeMode == AppThemeMode.forest;
-    const isWizard = true; // Both are dark themes
+    final isWizard = themeMode == AppThemeMode.wizard;
     final l10n = AppLocalizations.of(context)!;
     final isDesktop = _isDesktop(context);
     final isLandscape = _isLandscape(context);
@@ -429,7 +430,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         IconButton(
           icon: const Icon(Icons.person_outline),
           tooltip: 'Profil',
-          onPressed: () => _showComingSoon(context),
+          onPressed: () => context.push('/edit-profile'),
         ),
         IconButton(
           icon: const Icon(Icons.notifications_outlined),

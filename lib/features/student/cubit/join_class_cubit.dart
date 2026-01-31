@@ -2,12 +2,12 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../core/auth/models/user_model.dart';
 import '../../../../core/database/database_helper.dart';
-import '../../../../core/network/network_cubit.dart';
+import '../../../../core/network/network_cubit_v2.dart';
 import '../../../../core/network/sync_client.dart';
 import 'join_class_state.dart';
 
 class JoinClassCubit extends Cubit<JoinClassState> {
-  final NetworkCubit networkCubit;
+  final NetworkCubitV2 networkCubit;
   final User user;
 
   JoinClassCubit({required this.networkCubit, required this.user})

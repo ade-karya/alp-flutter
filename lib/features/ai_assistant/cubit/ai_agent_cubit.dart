@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 import '../services/ai_agent_service.dart';
 import '../../../core/settings/settings_cubit.dart';
 import '../../../core/auth/auth_cubit.dart';
@@ -13,15 +12,11 @@ import '../../../core/services/gemini_live_service.dart';
 import 'ai_agent_state.dart';
 
 /// AI Agent Cubit using Gemini Live API for real-time conversation
-/// Using speech_to_text for STT, Gemini Live for AI
 class AIAgentCubit extends Cubit<AIAgentState> {
   final AIAgentService _agentService;
   final SettingsCubit _settingsCubit;
   final AuthCubit _authCubit;
   final DatabaseHelper _databaseHelper;
-
-  // Speech services (local)
-  final SpeechToText _speechToText = SpeechToText();
 
   // Gemini Live service (cloud)
   final GeminiLiveService _geminiLive = GeminiLiveService();
@@ -30,7 +25,6 @@ class AIAgentCubit extends Cubit<AIAgentState> {
   StreamSubscription? _geminiEventSubscription;
 
   List<Map<String, String>> _messages = [];
-  bool _isSpeechInitialized = false;
   bool _isGeminiLiveConnected = false;
   String _accumulatedResponse = '';
 
@@ -165,23 +159,6 @@ Untuk pertanyaan umum, jawab langsung dengan teks biasa.
     }
   }
 
-  /// Initialize speech recognition
-  Future<bool> initSpeech() async {
-    if (_isSpeechInitialized) return true;
-
-    try {
-      _isSpeechInitialized = await _speechToText.initialize(
-        onError: (error) => debugPrint('Speech Error: ${error.errorMsg}'),
-        onStatus: (status) => debugPrint('Speech Status: $status'),
-        debugLogging: true,
-      );
-      return _isSpeechInitialized;
-    } catch (e) {
-      debugPrint('Speech initialization failed: $e');
-      return false;
-    }
-  }
-
   void startConversation() {
     _messages = [
       {
@@ -200,99 +177,6 @@ Untuk pertanyaan umum, jawab langsung dengan teks biasa.
 
     // Try to connect to Gemini Live in background
     _connectToGeminiLive();
-  }
-
-  /// Start listening using speech_to_text
-  Future<void> startListening() async {
-    final initialized = await initSpeech();
-    if (!initialized) {
-      _messages.add({
-        'role': 'error',
-        'content': 'Tidak dapat menginisialisasi pengenalan suara.',
-      });
-      emit(
-        AIAgentSuccess(
-          messages: List.from(_messages),
-          status: AIAgentStatus.idle,
-          isGeminiLiveConnected: _isGeminiLiveConnected,
-        ),
-      );
-      return;
-    }
-
-    if (_speechToText.isListening) return;
-
-    try {
-      String? localeId;
-      final locales = await _speechToText.locales();
-      final idLocale = locales
-          .where((l) => l.localeId.startsWith('id'))
-          .toList();
-      if (idLocale.isNotEmpty) {
-        localeId = idLocale.first.localeId;
-      }
-
-      await _speechToText.listen(
-        onResult: (result) {
-          if (state is AIAgentSuccess && result.recognizedWords.isNotEmpty) {
-            emit(
-              (state as AIAgentSuccess).copyWith(
-                activeMicrophone: result.recognizedWords,
-              ),
-            );
-          }
-          if (result.finalResult && result.recognizedWords.isNotEmpty) {
-            sendMessage(result.recognizedWords);
-          }
-        },
-        onSoundLevelChange: (level) {
-          if (state is AIAgentSuccess) {
-            emit((state as AIAgentSuccess).copyWith(soundLevel: level));
-          }
-        },
-        localeId: localeId,
-        listenFor: const Duration(seconds: 30),
-        pauseFor: const Duration(seconds: 3),
-        listenOptions: SpeechListenOptions(
-          partialResults: true,
-          cancelOnError: true,
-          listenMode: ListenMode.confirmation,
-        ),
-      );
-
-      emit(
-        AIAgentSuccess(
-          messages: List.from(_messages),
-          status: AIAgentStatus.listening,
-          activeMicrophone: 'Mendengarkan...',
-          isGeminiLiveConnected: _isGeminiLiveConnected,
-        ),
-      );
-    } catch (e) {
-      debugPrint('Error starting speech: $e');
-      _messages.add({'role': 'error', 'content': 'Gagal memulai mikrofon: $e'});
-      emit(
-        AIAgentSuccess(
-          messages: List.from(_messages),
-          status: AIAgentStatus.idle,
-          isGeminiLiveConnected: _isGeminiLiveConnected,
-        ),
-      );
-    }
-  }
-
-  /// Stop listening
-  void stopListening() {
-    _speechToText.stop();
-    if (state is AIAgentSuccess) {
-      emit(
-        (state as AIAgentSuccess).copyWith(
-          status: AIAgentStatus.idle,
-          soundLevel: 0.0,
-          activeMicrophone: null,
-        ),
-      );
-    }
   }
 
   /// Send text message

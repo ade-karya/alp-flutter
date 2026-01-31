@@ -19,9 +19,9 @@ class ThemeHelper {
   static Color getAccentColor(AppThemeMode mode) {
     switch (mode) {
       case AppThemeMode.wizard:
-        return const Color(0xFFFFD700); // Gold
+        return const Color(0xFFD4AF37); // Muted Gold for night
       case AppThemeMode.forest:
-        return const Color(0xFF81C784); // Light Green
+        return const Color(0xFF2E7D32); // Deep Forest Green for day
     }
   }
 
@@ -29,9 +29,9 @@ class ThemeHelper {
   static Color getSecondaryAccentColor(AppThemeMode mode) {
     switch (mode) {
       case AppThemeMode.wizard:
-        return const Color(0xFF9C27B0); // Purple
+        return const Color(0xFF7B1FA2); // Muted Purple
       case AppThemeMode.forest:
-        return const Color(0xFF4CAF50); // Green
+        return const Color(0xFF66BB6A); // Fresh Green
     }
   }
 
@@ -39,34 +39,49 @@ class ThemeHelper {
   static Color getCardColor(AppThemeMode mode) {
     switch (mode) {
       case AppThemeMode.wizard:
-        return Colors.black.withValues(alpha: 0.5);
+        return const Color(0xFF0D0D18).withValues(alpha: 0.85);
       case AppThemeMode.forest:
-        return const Color(0xFF1B3D1B).withValues(alpha: 0.7);
+        return const Color(0xFFFFFFFF); // White cards for light mode
     }
   }
 
   /// Gets the text color for headings
   static Color getHeadingColor(AppThemeMode mode) {
-    return Colors.white;
+    switch (mode) {
+      case AppThemeMode.wizard:
+        return const Color(0xFFE0E0E0); // Dimmed white for night
+      case AppThemeMode.forest:
+        return const Color(0xFF1B5E20); // Deepest Green for day
+    }
   }
 
   /// Gets the text color for body text
   static Color getBodyColor(AppThemeMode mode) {
-    return Colors.white70;
+    switch (mode) {
+      case AppThemeMode.wizard:
+        return const Color(0xFFB0B0B0); // Dimmed for night
+      case AppThemeMode.forest:
+        return const Color(0xFF33691E); // Dark green-gray for day
+    }
   }
 
   /// Gets the subtle text color
   static Color getSubtleColor(AppThemeMode mode) {
-    return Colors.white54;
+    switch (mode) {
+      case AppThemeMode.wizard:
+        return const Color(0xFF808080); // Muted gray for night
+      case AppThemeMode.forest:
+        return const Color(0xFF558B2F); // Medium moss green for day
+    }
   }
 
   /// Gets the border color for cards and containers
   static Color getBorderColor(AppThemeMode mode) {
     switch (mode) {
       case AppThemeMode.wizard:
-        return Colors.white24;
+        return const Color(0xFF2A2A40);
       case AppThemeMode.forest:
-        return const Color(0xFF4CAF50).withValues(alpha: 0.3);
+        return const Color(0xFFA5D6A7); // Light green border
     }
   }
 
@@ -74,9 +89,9 @@ class ThemeHelper {
   static Color getDialogColor(AppThemeMode mode) {
     switch (mode) {
       case AppThemeMode.wizard:
-        return const Color(0xFF1A1A2E);
+        return const Color(0xFF0A0A15);
       case AppThemeMode.forest:
-        return const Color(0xFF0D260D);
+        return Colors.white; // Pure white
     }
   }
 }

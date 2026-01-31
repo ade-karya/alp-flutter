@@ -330,7 +330,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         IconButton(
           icon: const Icon(Icons.person_outline),
           tooltip: 'Profil',
-          onPressed: () => _showComingSoon(context),
+          onPressed: () => context.push('/edit-profile'),
         ),
         IconButton(
           icon: const Icon(Icons.notifications_outlined),
@@ -807,35 +807,35 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         'id': 'quiz',
         'label': 'Kuis',
         'color': Colors.orange,
-        'route': null,
+        'route': '/student/courses',
       },
       {
         'icon': Icons.assignment,
         'id': 'homework',
         'label': 'Tugas',
         'color': Colors.red,
-        'route': null,
+        'route': '/student/courses',
       },
       {
         'icon': Icons.leaderboard,
         'id': 'leaderboard',
         'label': 'Peringkat',
         'color': Colors.amber,
-        'route': null,
+        'route': '/student/courses',
       },
       {
         'icon': Icons.emoji_events,
         'id': 'achievements',
         'label': 'Pencapaian',
         'color': Colors.green,
-        'route': null,
+        'route': '/student/courses',
       },
       {
         'icon': Icons.calendar_today,
         'id': 'schedule',
         'label': 'Jadwal',
         'color': Colors.teal,
-        'route': null,
+        'route': '/student/courses',
       },
       {
         'icon': Icons.grid_view,
@@ -1144,7 +1144,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => _showComingSoon(context),
+        onTap: () => context.push('/student/courses'),
         borderRadius: BorderRadius.circular(12),
         child: Container(
           height: isDesktop ? 90 : 100,
@@ -1333,7 +1333,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     color: Colors.orange,
                     onTap: () {
                       Navigator.pop(context);
-                      _showComingSoon(context);
+                      context.push('/student/courses');
                     },
                     isWizard: isWizard,
                   ),
@@ -1344,7 +1344,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     color: Colors.green,
                     onTap: () {
                       Navigator.pop(context);
-                      _showComingSoon(context);
+                      context.push('/student/courses');
                     },
                     isWizard: isWizard,
                   ),
@@ -1355,7 +1355,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     color: Colors.purple,
                     onTap: () {
                       Navigator.pop(context);
-                      _showComingSoon(context);
+                      context.push('/student/courses');
                     },
                     isWizard: isWizard,
                   ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:alp/core/network/network_cubit.dart';
+import 'package:alp/core/network/network_cubit_v2.dart';
 import 'package:alp/core/auth/auth_cubit.dart';
 import 'package:alp/core/auth/models/user_model.dart';
 
@@ -26,7 +26,7 @@ class _NetworkSettingsScreenState extends State<NetworkSettingsScreen> {
         final user = authState.user;
         // For students, start discovery to populate interfaces/IP
         if (user.role == UserRole.student) {
-          context.read<NetworkCubit>().start(user);
+          context.read<NetworkCubitV2>().start(user);
         }
       }
     });
@@ -37,9 +37,9 @@ class _NetworkSettingsScreenState extends State<NetworkSettingsScreen> {
     final isWizard = context.watch<ThemeCubit>().state == AppThemeMode.wizard;
 
     Widget buildContent() {
-      return BlocBuilder<NetworkCubit, NetworkState>(
+      return BlocBuilder<NetworkCubitV2, NetworkState>(
         builder: (context, state) {
-          final cubit = context.read<NetworkCubit>();
+          final cubit = context.read<NetworkCubitV2>();
           final authState = context.read<AuthCubit>().state;
           // Determine currentUser role
           final user = (authState is Authenticated) ? authState.user : null;

@@ -32,7 +32,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
     final isWizard = context.watch<ThemeCubit>().state == AppThemeMode.wizard;
 
     return Scaffold(
-      backgroundColor: isWizard ? Colors.transparent : Colors.grey[50],
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(
           l10n.aiAssistantTitle,
@@ -42,7 +42,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
             fontFamily: isWizard ? 'Cinzel' : null,
           ),
         ),
-        backgroundColor: isWizard ? Colors.transparent : Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: IconThemeData(
           color: isWizard ? Colors.white : Colors.black87,

@@ -57,7 +57,11 @@ class ScaffoldWithNavBar extends StatelessWidget {
     AppThemeMode themeMode,
   ) {
     final selectedColor = ThemeHelper.getAccentColor(themeMode);
-    const unselectedColor = Colors.white70;
+    final unselectedColor = themeMode == AppThemeMode.forest
+        ? const Color(0xFF33691E).withValues(
+            alpha: 0.7,
+          ) // Dark Green for Forest
+        : Colors.white70; // White for Wizard
 
     return Row(
       children: [
@@ -68,12 +72,12 @@ class ScaffoldWithNavBar extends StatelessWidget {
           backgroundColor: Colors.white.withValues(alpha: 0.05),
           labelType: NavigationRailLabelType.all,
           selectedIconTheme: IconThemeData(color: selectedColor),
-          unselectedIconTheme: const IconThemeData(color: unselectedColor),
+          unselectedIconTheme: IconThemeData(color: unselectedColor),
           selectedLabelTextStyle: TextStyle(
             color: selectedColor,
             fontWeight: FontWeight.bold,
           ),
-          unselectedLabelTextStyle: const TextStyle(color: unselectedColor),
+          unselectedLabelTextStyle: TextStyle(color: unselectedColor),
           leading: Column(
             children: [
               const SizedBox(height: 20),
