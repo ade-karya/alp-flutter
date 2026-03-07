@@ -36,7 +36,7 @@ class _QuestionBankScreenState extends State<QuestionBankScreen>
     final authState = context.read<AuthCubit>().state;
     if (authState is Authenticated) {
       _questionsFuture = DatabaseHelper.instance.getTeacherQuestions(
-        authState.user.id!,
+        authState.user.effectiveId,
       );
     } else {
       _questionsFuture = Future.value([]);

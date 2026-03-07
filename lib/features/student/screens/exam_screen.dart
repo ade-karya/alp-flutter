@@ -112,7 +112,7 @@ class _ExamScreenState extends State<ExamScreen> {
       // 1. Save to Local Database (Always do this first for safety)
       await db.createSubmission(
         assignmentId: widget.assignmentId,
-        studentId: user.id!,
+        studentId: user.effectiveId,
         answers: _answers,
         initialScore: finalScore,
       );
@@ -137,7 +137,7 @@ class _ExamScreenState extends State<ExamScreen> {
 
               final remoteId = await client.submitAnswers(
                 assignmentId: widget.assignmentId,
-                studentId: user.id!,
+                studentId: user.effectiveId,
                 answers: answersList,
               );
 

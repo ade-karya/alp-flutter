@@ -47,7 +47,7 @@ class _MyCoursesScreenState extends State<_MyCoursesView> {
   Future<void> _loadCourses() async {
     try {
       final user = (context.read<AuthCubit>().state as Authenticated).user;
-      if (user.id == null) {
+      if (user.id == null && user.uid == null) {
         if (mounted) {
           setState(() {
             _isLoading = false;
@@ -56,7 +56,9 @@ class _MyCoursesScreenState extends State<_MyCoursesView> {
         return;
       }
 
-      final courses = await DatabaseHelper.instance.getStudentClasses(user.id!);
+      final courses = await DatabaseHelper.instance.getStudentClasses(
+        user.effectiveId,
+      );
       if (mounted) {
         setState(() {
           _courses = courses;

@@ -128,8 +128,8 @@ class NetworkCubitV2 extends Cubit<NetworkState> {
     }
 
     // Start sync server for teachers
-    if (user.role == UserRole.teacher && user.id != null) {
-      _syncServer = SyncServer(teacherId: user.id!);
+    if (user.role == UserRole.teacher && user.hasValidId) {
+      _syncServer = SyncServer(teacherId: user.effectiveId);
       final boundIp = await _syncServer!.start();
       if (boundIp != null) {
         _serverIp = boundIp;

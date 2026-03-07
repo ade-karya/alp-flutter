@@ -78,9 +78,9 @@ class NetworkCubit extends Cubit<NetworkState> {
       }
 
       // 2. Start sync server for teachers
-      if (user.role == UserRole.teacher && user.id != null) {
+      if (user.role == UserRole.teacher && user.hasValidId) {
         debugPrint('Starting sync server for teacher...');
-        _syncServer = SyncServer(teacherId: user.id!);
+        _syncServer = SyncServer(teacherId: user.effectiveId);
         // We bind to 0.0.0.0 (all interfaces) so selection is just for display
         final boundIp = await _syncServer!.start();
 

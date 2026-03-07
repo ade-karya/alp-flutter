@@ -25,7 +25,13 @@ import 'models/user_model.dart';
 /// 4. Click on it and copy the Client Secret
 const String _desktopClientId =
     '83128997767-2k4m9rrofgt8a9d712m4vt0p0lg511i3.apps.googleusercontent.com';
-const String _desktopClientSecret = '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';
+
+/// Client secret loaded from compile-time environment variable.
+/// Run with: flutter run --dart-define=GOOGLE_CLIENT_SECRET=your_secret_here
+const String _desktopClientSecret = String.fromEnvironment(
+  'GOOGLE_CLIENT_SECRET',
+  defaultValue: '',
+);
 
 /// Check if running on desktop platform (Windows, Linux, macOS)
 bool get _isDesktop =>
@@ -122,6 +128,14 @@ class FirebaseAuthService {
     HttpServer? server;
 
     try {
+      // Validate client secret is provided via --dart-define
+      if (_desktopClientSecret.isEmpty) {
+        throw Exception(
+          'GOOGLE_CLIENT_SECRET not provided. '
+          'Run with: flutter run --dart-define=GOOGLE_CLIENT_SECRET=your_secret',
+        );
+      }
+
       // Step 1: Start local HTTP server to receive the OAuth callback
       const int port = 8080; // Use 8080 as it's commonly whitelisted
       server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);

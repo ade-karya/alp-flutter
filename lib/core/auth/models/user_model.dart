@@ -139,4 +139,11 @@ class User {
     if (email == null || email!.isEmpty) return '';
     return email!;
   }
+
+  /// Safe accessor for user ID — returns id or 0 if null.
+  /// Use this instead of `user.id!` to prevent null crashes.
+  int get effectiveId => id ?? 0;
+
+  /// Check if user has a valid (non-null) local ID.
+  bool get hasValidId => id != null;
 }

@@ -11,6 +11,7 @@ import 'core/services/gemini_openai_service.dart';
 import 'core/auth/auth_cubit.dart';
 import 'core/auth/firebase_auth_service.dart';
 import 'core/database/database_helper.dart';
+import 'core/database/firestore_sync_manager.dart';
 import 'package:alp/l10n/arb/app_localizations.dart';
 import 'core/network/network_discovery_service.dart';
 import 'core/network/network_cubit_v2.dart';
@@ -51,39 +52,17 @@ void main() async {
   // Handle Flutter Errors (UI)
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    _handleGlobalError();
+    debugPrint('Flutter Error: ${details.exceptionAsString()}');
   };
 
   // Handle Async Errors (Futures, etc.)
   PlatformDispatcher.instance.onError = (error, stack) {
     debugPrint('Async Error caught: $error');
     debugPrint(stack.toString());
-    _handleGlobalError();
-    return true; // handled
+    return true; // handled — do NOT redirect, just log
   };
 
   runApp(const MyApp());
-}
-
-bool _isHandlingError = false;
-
-void _handleGlobalError() {
-  if (_isHandlingError) return;
-  _isHandlingError = true;
-
-  // Small delay to ensure frame is ready for navigation
-  Future.delayed(const Duration(milliseconds: 500), () {
-    _isHandlingError = false;
-    final context = rootNavigatorKey.currentContext;
-    if (context != null && context.mounted) {
-      try {
-        context.go('/user-selection');
-      } catch (e) {
-        // Fallback if route not found
-        context.go('/login');
-      }
-    }
-  });
 }
 
 class MyApp extends StatefulWidget {
@@ -104,6 +83,26 @@ Future<void> _toggleFullscreen() async {
 class _MyAppState extends State<MyApp> {
   GoRouter? _router;
 
+  /// Trigger bidirectional sync in background after authentication
+  void _triggerSync(
+    DatabaseHelper dbHelper,
+    FirestoreSyncManager syncManager,
+    String uid,
+  ) {
+    () async {
+      try {
+        // Only run sync on non-web platforms (web uses Firestore directly)
+        if (!kIsWeb) {
+          final db = await dbHelper.database;
+          await syncManager.pullAll(uid: uid, db: db);
+          await syncManager.pushAll(uid: uid, db: db);
+        }
+      } catch (e) {
+        debugPrint('Sync error (non-fatal): $e');
+      }
+    }();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
@@ -111,6 +110,7 @@ class _MyAppState extends State<MyApp> {
         RepositoryProvider(create: (context) => GeminiOpenAIService()),
         RepositoryProvider(create: (context) => DatabaseHelper.instance),
         RepositoryProvider(create: (context) => FirebaseAuthService()),
+        RepositoryProvider(create: (context) => FirestoreSyncManager()),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -136,21 +136,34 @@ class _MyAppState extends State<MyApp> {
             return BlocListener<AuthCubit, AuthState>(
               listener: (context, authState) {
                 final networkCubit = context.read<NetworkCubitV2>();
+                final dbHelper = context.read<DatabaseHelper>();
+                final syncManager = context.read<FirestoreSyncManager>();
+
                 if (authState is Authenticated) {
                   networkCubit.start(authState.user);
+
+                  // Enable Firestore sync if user has a Firebase UID
+                  final uid = authState.user.uid;
+                  if (uid != null) {
+                    dbHelper.enableSync(syncManager, uid);
+                    // Pull data from Firestore in background
+                    _triggerSync(dbHelper, syncManager, uid);
+                  }
                 } else if (authState is Unauthenticated) {
                   networkCubit.stop();
+                  dbHelper.disableSync();
                 }
               },
               child: BlocBuilder<AuthCubit, AuthState>(
                 builder: (context, authState) {
-                  final userId = authState is Authenticated
-                      ? authState.user.id
+                  final firebaseUid = authState is Authenticated
+                      ? authState.user.uid
                       : null;
 
                   return BlocProvider(
-                    key: ValueKey(userId),
-                    create: (context) => SettingsCubit(userId: userId),
+                    key: ValueKey(firebaseUid),
+                    create: (context) =>
+                        SettingsCubit(firebaseUid: firebaseUid),
                     child: BlocBuilder<SettingsCubit, SettingsState>(
                       builder: (context, settingsState) {
                         return BlocBuilder<ThemeCubit, AppThemeMode>(
@@ -166,6 +179,7 @@ class _MyAppState extends State<MyApp> {
                                 }
                               },
                               child: MaterialApp.router(
+                                debugShowCheckedModeBanner: false,
                                 onGenerateTitle: (context) =>
                                     AppLocalizations.of(context)!.appTitle,
                                 theme: AppThemes.getTheme(themeMode),

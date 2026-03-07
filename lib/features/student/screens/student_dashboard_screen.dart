@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:alp/l10n/arb/app_localizations.dart';
 import '../../../core/theme/theme_cubit.dart';
 import '../../../core/theme/app_themes.dart';
 import '../../../core/auth/auth_cubit.dart';
+import '../../../core/settings/settings_cubit.dart';
+import '../../../core/database/database_helper.dart';
+import '../../../core/database/firestore_sync_manager.dart';
 
 class StudentDashboardScreen extends StatefulWidget {
   const StudentDashboardScreen({super.key});
@@ -15,6 +19,57 @@ class StudentDashboardScreen extends StatefulWidget {
 }
 
 class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
+  bool _isSyncing = false;
+
+  /// Perform manual sync (pull + push)
+  Future<void> _performSync(BuildContext context) async {
+    if (_isSyncing || kIsWeb) return;
+
+    final authState = context.read<AuthCubit>().state;
+    if (authState is! Authenticated || authState.user.uid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Silakan login dengan Google untuk sinkronisasi'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSyncing = true);
+
+    try {
+      final dbHelper = context.read<DatabaseHelper>();
+      final syncManager = context.read<FirestoreSyncManager>();
+      final uid = authState.user.uid!;
+      final db = await dbHelper.database;
+
+      await syncManager.pullAll(uid: uid, db: db);
+      await syncManager.pushAll(uid: uid, db: db);
+
+      // Reload AI settings from Firestore
+      if (context.mounted) {
+        await context.read<SettingsCubit>().reload();
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Data berhasil disinkronkan'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal sinkronisasi: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isSyncing = false);
+    }
+  }
+
   void _showLogoutConfirmation(BuildContext context) {
     final isWizard = context.read<ThemeCubit>().state == AppThemeMode.wizard;
 
@@ -109,15 +164,32 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               constraints: BoxConstraints(
                 maxWidth: isDesktop ? 1400 : double.infinity,
               ),
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isDesktop ? 32 : 0,
-                  vertical: isDesktop ? 24 : 0,
-                ),
-                child: isDesktop
-                    ? _buildDesktopLayout(context, userName, l10n, isWizard)
-                    : _buildMobileLayout(context, userName, l10n, isWizard),
-              ),
+              child: isDesktop
+                  ? SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 24,
+                      ),
+                      child: _buildDesktopLayout(
+                        context,
+                        userName,
+                        l10n,
+                        isWizard,
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: () => _performSync(context),
+                      color: isWizard ? const Color(0xFFFFD700) : Colors.blue,
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: _buildMobileLayout(
+                          context,
+                          userName,
+                          l10n,
+                          isWizard,
+                        ),
+                      ),
+                    ),
             ),
           ),
           floatingActionButton: isDesktop
@@ -296,6 +368,21 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             ),
       actions: [
         if (isDesktop) ...[
+          // Sync button for desktop
+          _isSyncing
+              ? const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              : IconButton(
+                  icon: const Icon(Icons.sync),
+                  tooltip: 'Sinkronkan Data',
+                  onPressed: () => _performSync(context),
+                ),
           // Search bar for desktop
           Container(
             width: 300,

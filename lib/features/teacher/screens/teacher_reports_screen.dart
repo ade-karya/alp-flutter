@@ -27,7 +27,7 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen> {
     final authState = context.read<AuthCubit>().state;
     if (authState is Authenticated) {
       final classes = await DatabaseHelper.instance.getTeacherClasses(
-        authState.user.id!,
+        authState.user.effectiveId,
       );
       setState(() {
         _classes = classes;

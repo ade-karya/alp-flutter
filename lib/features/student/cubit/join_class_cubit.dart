@@ -38,7 +38,7 @@ class JoinClassCubit extends Cubit<JoinClassState> {
               // Found on peer! Enroll
               final enrolled = await client.enrollStudent(
                 classId: remoteCls['id'] as int,
-                studentId: user.id!,
+                studentId: user.effectiveId,
                 studentName: user.name,
                 studentIdentifier: user.identifier ?? '',
               );
@@ -47,7 +47,7 @@ class JoinClassCubit extends Cubit<JoinClassState> {
                 // Save locally
                 await DatabaseHelper.instance.saveRemoteClassAndEnroll(
                   remoteClass: remoteCls,
-                  studentId: user.id!,
+                  studentId: user.effectiveId,
                   teacherName: peer['name'] ?? 'Unknown Teacher',
                 );
 
@@ -80,12 +80,12 @@ class JoinClassCubit extends Cubit<JoinClassState> {
 
       // Ensure local enrollment record exists
       final isEnrolled = await DatabaseHelper.instance.isStudentEnrolled(
-        user.id!,
+        user.effectiveId,
         cls['id'],
       );
 
       if (!isEnrolled) {
-        await DatabaseHelper.instance.joinClass(user.id!, cls['id']);
+        await DatabaseHelper.instance.joinClass(user.effectiveId, cls['id']);
       } else if (!synced && cls['teacher_name'] != 'Teacher (QR)') {
         // Only warn if we didn't just sync and it looks like a manual re-entry without connection
         // But generally, we want to allow "refreshing" via PIN without error
@@ -127,7 +127,7 @@ class JoinClassCubit extends Cubit<JoinClassState> {
 
       final enrolled = await client.enrollStudent(
         classId: cls['id'] as int,
-        studentId: user.id!,
+        studentId: user.effectiveId,
         studentName: user.name,
         studentIdentifier: user.identifier ?? '',
       );
@@ -140,7 +140,7 @@ class JoinClassCubit extends Cubit<JoinClassState> {
       // Success - Save Local
       await DatabaseHelper.instance.saveRemoteClassAndEnroll(
         remoteClass: cls,
-        studentId: user.id!,
+        studentId: user.effectiveId,
         teacherName: 'Teacher (QR)',
       );
 

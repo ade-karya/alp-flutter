@@ -230,7 +230,7 @@ Untuk pertanyaan umum, jawab langsung dengan teks biasa.
       );
 
       if (response is Map<String, dynamic> && response.containsKey('action')) {
-        await _handleAction(response, authState.user.id!);
+        await _handleAction(response, authState.user.effectiveId);
       } else if (response is String) {
         _messages.add({'role': 'ai', 'content': response});
         emit(

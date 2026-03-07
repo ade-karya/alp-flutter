@@ -55,7 +55,7 @@ class UserSelectionScreen extends StatelessWidget {
               if (pinController.text == user.pin) {
                 Navigator.pop(dialogContext);
                 if (context.mounted) {
-                  context.read<AuthCubit>().selectUser(user.id!);
+                  context.read<AuthCubit>().selectUser(user.effectiveId);
                 }
               } else {
                 ScaffoldMessenger.of(

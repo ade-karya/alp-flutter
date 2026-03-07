@@ -109,9 +109,9 @@ class NetworkCubit extends Cubit<NetworkState> {
 
   Future<String?> _startLocalNetwork(User user) async {
     try {
-      if (user.role == UserRole.teacher && user.id != null) {
+      if (user.role == UserRole.teacher && user.hasValidId) {
         // Start HTTP server
-        _server = SyncServer(teacherId: user.id!);
+        _server = SyncServer(teacherId: user.effectiveId);
         final ip = await _server!.start();
 
         if (ip != null) {

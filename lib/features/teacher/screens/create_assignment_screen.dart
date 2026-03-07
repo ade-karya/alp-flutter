@@ -542,7 +542,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   Future<void> _openQuestionPicker() async {
     final user = (context.read<AuthCubit>().state as Authenticated).user;
     final allQuestions = await DatabaseHelper.instance.getTeacherQuestions(
-      user.id!,
+      user.effectiveId,
     );
 
     if (!mounted) return;
@@ -783,7 +783,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
 
     try {
       await DatabaseHelper.instance.createAssignment(
-        teacherId: user.id!,
+        teacherId: user.effectiveId,
         classId: widget.classId,
         title: _titleController.text,
         description: _descController.text,

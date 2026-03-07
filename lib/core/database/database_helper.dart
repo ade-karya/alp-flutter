@@ -1,9 +1,11 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'dart:async';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../auth/models/user_model.dart';
+import 'firestore_sync_manager.dart';
 
 class DatabaseHelper {
   // Stream to notify listeners about class data changes (members, assignments, etc.)
@@ -14,8 +16,50 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static final Random _random = Random.secure();
+
+  /// Sync manager for Firestore write-through
+  FirestoreSyncManager? _syncManager;
+  String? _currentUid;
 
   DatabaseHelper._init();
+
+  /// Set the sync manager and current user UID to enable write-through sync
+  void enableSync(FirestoreSyncManager syncManager, String uid) {
+    _syncManager = syncManager;
+    _currentUid = uid;
+    debugPrint('DatabaseHelper: Sync enabled for UID=$uid');
+  }
+
+  /// Disable sync (on logout)
+  void disableSync() {
+    _syncManager = null;
+    _currentUid = null;
+    debugPrint('DatabaseHelper: Sync disabled');
+  }
+
+  /// Helper to push a record to Firestore in background (fire-and-forget)
+  void _syncPush(String table, Map<String, dynamic> data, {String? syncId}) {
+    if (_syncManager == null || _currentUid == null) return;
+    _syncManager!.pushRecord(
+      table: table,
+      data: data,
+      uid: _currentUid!,
+      syncId: syncId,
+    );
+  }
+
+  /// Helper to delete a record from Firestore in background
+  void _syncDelete(String table, String syncId) {
+    if (_syncManager == null || _currentUid == null) return;
+    _syncManager!.deleteRecord(table: table, uid: _currentUid!, syncId: syncId);
+  }
+
+  /// Generate a collision-resistant unique ID for Firestore Web path.
+  /// Combines microseconds timestamp + random offset to prevent duplicates.
+  static int _uniqueId() {
+    return DateTime.now().microsecondsSinceEpoch + _random.nextInt(99999);
+  }
 
   Future<Database> get database async {
     if (kIsWeb) {
@@ -34,7 +78,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 6,
+      version: 8,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -51,7 +95,9 @@ class DatabaseHelper {
         pin TEXT,
         apiKey TEXT,
         selectedModel TEXT,
-        createdAt TEXT NOT NULL
+        createdAt TEXT NOT NULL,
+        sync_id TEXT,
+        updated_at TEXT
       )
     ''');
 
@@ -63,6 +109,8 @@ class DatabaseHelper {
         description TEXT,
         class_pin TEXT NOT NULL UNIQUE,
         created_at TEXT NOT NULL,
+        sync_id TEXT,
+        updated_at TEXT,
         FOREIGN KEY (teacher_id) REFERENCES users (id) ON DELETE CASCADE
       )
     ''');
@@ -73,6 +121,8 @@ class DatabaseHelper {
         class_id INTEGER NOT NULL,
         student_id INTEGER NOT NULL,
         joined_at TEXT NOT NULL,
+        sync_id TEXT,
+        updated_at TEXT,
         FOREIGN KEY (class_id) REFERENCES classes (id) ON DELETE CASCADE,
         FOREIGN KEY (student_id) REFERENCES users (id) ON DELETE CASCADE,
         UNIQUE(class_id, student_id)
@@ -96,6 +146,8 @@ class DatabaseHelper {
         rubric TEXT,
         feedback TEXT,
         created_at TEXT NOT NULL,
+        sync_id TEXT,
+        updated_at TEXT,
         FOREIGN KEY (teacher_id) REFERENCES users (id) ON DELETE CASCADE,
         FOREIGN KEY (class_id) REFERENCES classes (id) ON DELETE SET NULL
       )
@@ -112,6 +164,8 @@ class DatabaseHelper {
           duration_minutes INTEGER NOT NULL,
           is_published INTEGER DEFAULT 1,
           created_at TEXT NOT NULL,
+          sync_id TEXT,
+          updated_at TEXT,
           FOREIGN KEY (teacher_id) REFERENCES users (id) ON DELETE CASCADE,
           FOREIGN KEY (class_id) REFERENCES classes (id) ON DELETE CASCADE
         )
@@ -122,6 +176,8 @@ class DatabaseHelper {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           assignment_id INTEGER NOT NULL,
           question_id INTEGER NOT NULL,
+          sync_id TEXT,
+          updated_at TEXT,
           FOREIGN KEY (assignment_id) REFERENCES assignments (id) ON DELETE CASCADE,
           FOREIGN KEY (question_id) REFERENCES questions (id) ON DELETE CASCADE
         )
@@ -135,6 +191,8 @@ class DatabaseHelper {
           submitted_at TEXT NOT NULL,
           score REAL,
           feedback TEXT,
+          sync_id TEXT,
+          updated_at TEXT,
           FOREIGN KEY (assignment_id) REFERENCES assignments (id) ON DELETE CASCADE,
           FOREIGN KEY (student_id) REFERENCES users (id) ON DELETE CASCADE
         )
@@ -146,10 +204,23 @@ class DatabaseHelper {
           submission_id INTEGER NOT NULL,
           question_id INTEGER NOT NULL,
           answer TEXT,
+          sync_id TEXT,
+          updated_at TEXT,
           FOREIGN KEY (submission_id) REFERENCES submissions (id) ON DELETE CASCADE,
           FOREIGN KEY (question_id) REFERENCES questions (id) ON DELETE CASCADE
         )
       ''');
+    await db.execute('''
+      CREATE TABLE ai_settings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_uid TEXT NOT NULL UNIQUE,
+        providers_json TEXT,
+        active_provider TEXT,
+        locale TEXT DEFAULT 'id',
+        updated_at TEXT,
+        sync_id TEXT
+      )
+    ''');
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -268,6 +339,41 @@ class DatabaseHelper {
         // Column might already exist
       }
     }
+    if (oldVersion < 7) {
+      // Version 7: Add sync_id and updated_at for Firestore sync
+      final tables = [
+        'users',
+        'classes',
+        'class_members',
+        'questions',
+        'assignments',
+        'assignment_questions',
+        'submissions',
+        'student_answers',
+      ];
+      for (final table in tables) {
+        try {
+          await db.execute('ALTER TABLE $table ADD COLUMN sync_id TEXT');
+        } catch (_) {}
+        try {
+          await db.execute('ALTER TABLE $table ADD COLUMN updated_at TEXT');
+        } catch (_) {}
+      }
+    }
+    if (oldVersion < 8) {
+      // Version 8: AI settings table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS ai_settings (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_uid TEXT NOT NULL UNIQUE,
+          providers_json TEXT,
+          active_provider TEXT,
+          locale TEXT DEFAULT 'id',
+          updated_at TEXT,
+          sync_id TEXT
+        )
+      ''');
+    }
   }
 
   Future<User?> getUserByIdentifier(String identifier) async {
@@ -351,7 +457,7 @@ class DatabaseHelper {
 
   Future<int> createUser(User user) async {
     if (kIsWeb) {
-      final int newId = DateTime.now().millisecondsSinceEpoch;
+      final int newId = _uniqueId();
       final data = user.toFirestore();
       data['id'] = newId; // Store local ID mapping
       // Use standard auto-ID for document, but map 'id' field
@@ -414,7 +520,7 @@ class DatabaseHelper {
     required String pin,
   }) async {
     if (kIsWeb) {
-      final int newId = DateTime.now().millisecondsSinceEpoch;
+      final int newId = _uniqueId();
       await _firestore.collection('classes').add({
         'id': newId,
         'teacher_id': teacherId,
@@ -426,13 +532,28 @@ class DatabaseHelper {
       return newId;
     }
     final db = await database;
-    return await db.insert('classes', {
+    final now = DateTime.now().toIso8601String();
+    final classId = await db.insert('classes', {
       'teacher_id': teacherId,
       'name': name,
       'description': description,
       'class_pin': pin,
-      'created_at': DateTime.now().toIso8601String(),
+      'created_at': now,
+      'updated_at': now,
     });
+
+    // Sync to Firestore
+    _syncPush('classes', {
+      'id': classId,
+      'teacher_id': teacherId,
+      'name': name,
+      'description': description,
+      'class_pin': pin,
+      'created_at': now,
+      'updated_at': now,
+    });
+
+    return classId;
   }
 
   Future<List<Map<String, dynamic>>> getTeacherClasses(int teacherId) async {
@@ -483,10 +604,20 @@ class DatabaseHelper {
       return;
     }
     final db = await database;
+    final now = DateTime.now().toIso8601String();
     await db.insert('class_members', {
       'class_id': classId,
       'student_id': studentId,
-      'joined_at': DateTime.now().toIso8601String(),
+      'joined_at': now,
+      'updated_at': now,
+    });
+
+    // Sync to Firestore
+    _syncPush('class_members', {
+      'class_id': classId,
+      'student_id': studentId,
+      'joined_at': now,
+      'updated_at': now,
     });
   }
 
@@ -621,14 +752,22 @@ class DatabaseHelper {
 
   Future<int> createQuestion(Map<String, dynamic> question) async {
     if (kIsWeb) {
-      final int newId = DateTime.now().millisecondsSinceEpoch;
+      final int newId = _uniqueId();
       final data = Map<String, dynamic>.from(question);
       data['id'] = newId;
       await _firestore.collection('questions').add(data);
       return newId;
     }
     final db = await database;
-    return await db.insert('questions', question);
+    final now = DateTime.now().toIso8601String();
+    final data = Map<String, dynamic>.from(question);
+    data['updated_at'] = now;
+    final id = await db.insert('questions', data);
+
+    // Sync to Firestore
+    _syncPush('questions', {...data, 'id': id});
+
+    return id;
   }
 
   Future<List<int>> createQuestions(
@@ -638,8 +777,7 @@ class DatabaseHelper {
       final ids = <int>[];
       final batch = _firestore.batch();
       for (final q in questions) {
-        final int newId =
-            DateTime.now().millisecondsSinceEpoch + ids.length; // Ensure unique
+        final int newId = _uniqueId() + ids.length; // offset per item in batch
         final data = Map<String, dynamic>.from(q);
         data['id'] = newId;
         final docRef = _firestore.collection('questions').doc(); // Auto-ID doc
@@ -651,9 +789,15 @@ class DatabaseHelper {
     }
     final db = await database;
     final ids = <int>[];
+    final now = DateTime.now().toIso8601String();
     for (final q in questions) {
-      final id = await db.insert('questions', q);
+      final data = Map<String, dynamic>.from(q);
+      data['updated_at'] = now;
+      final id = await db.insert('questions', data);
       ids.add(id);
+
+      // Sync each question to Firestore
+      _syncPush('questions', {...data, 'id': id});
     }
     return ids;
   }
@@ -707,12 +851,32 @@ class DatabaseHelper {
       return count;
     }
     final db = await database;
-    return await db.update(
+    final data = Map<String, dynamic>.from(question);
+    data['updated_at'] = DateTime.now().toIso8601String();
+    final count = await db.update(
       'questions',
-      question,
+      data,
       where: 'id = ?',
       whereArgs: [id],
     );
+
+    // Sync to Firestore
+    if (count > 0) {
+      final updated = await db.query(
+        'questions',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      if (updated.isNotEmpty) {
+        _syncPush(
+          'questions',
+          updated.first,
+          syncId: updated.first['sync_id'] as String?,
+        );
+      }
+    }
+
+    return count;
   }
 
   Future<int> deleteQuestion(int id) async {
@@ -729,7 +893,28 @@ class DatabaseHelper {
       return count;
     }
     final db = await database;
-    return await db.delete('questions', where: 'id = ?', whereArgs: [id]);
+    // Get sync_id before deleting
+    final existing = await db.query(
+      'questions',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    final syncId = existing.isNotEmpty
+        ? existing.first['sync_id'] as String?
+        : null;
+
+    final count = await db.delete(
+      'questions',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    // Sync delete to Firestore
+    if (count > 0 && syncId != null) {
+      _syncDelete('questions', syncId);
+    }
+
+    return count;
   }
 
   // --- Assignment Methods ---
@@ -744,7 +929,7 @@ class DatabaseHelper {
     required List<int> questionIds,
   }) async {
     if (kIsWeb) {
-      final int assignmentId = DateTime.now().millisecondsSinceEpoch;
+      final int assignmentId = _uniqueId();
       await _firestore.collection('assignments').add({
         'id': assignmentId,
         'teacher_id': teacherId,
@@ -767,6 +952,7 @@ class DatabaseHelper {
       return assignmentId;
     }
     final db = await database;
+    final now = DateTime.now().toIso8601String();
     final result = await db.transaction((txn) async {
       final assignmentId = await txn.insert('assignments', {
         'teacher_id': teacherId,
@@ -775,17 +961,39 @@ class DatabaseHelper {
         'description': description,
         'scheduled_at': scheduledAt.toIso8601String(),
         'duration_minutes': durationMinutes,
-        'created_at': DateTime.now().toIso8601String(),
+        'created_at': now,
+        'updated_at': now,
       });
 
       for (final qId in questionIds) {
         await txn.insert('assignment_questions', {
           'assignment_id': assignmentId,
           'question_id': qId,
+          'updated_at': now,
         });
       }
       return assignmentId;
     });
+
+    // Sync to Firestore
+    _syncPush('assignments', {
+      'id': result,
+      'teacher_id': teacherId,
+      'class_id': classId,
+      'title': title,
+      'description': description,
+      'scheduled_at': scheduledAt.toIso8601String(),
+      'duration_minutes': durationMinutes,
+      'created_at': now,
+      'updated_at': now,
+    });
+    for (final qId in questionIds) {
+      _syncPush('assignment_questions', {
+        'assignment_id': result,
+        'question_id': qId,
+        'updated_at': now,
+      });
+    }
 
     // Notify listeners
     _classUpdateController.add(classId);
@@ -874,7 +1082,7 @@ class DatabaseHelper {
     double? initialScore,
   }) async {
     if (kIsWeb) {
-      final int submissionId = DateTime.now().millisecondsSinceEpoch;
+      final int submissionId = _uniqueId();
       await _firestore.collection('submissions').add({
         'id': submissionId,
         'assignment_id': assignmentId,
@@ -893,12 +1101,14 @@ class DatabaseHelper {
       return submissionId;
     }
     final db = await database;
-    return await db.transaction((txn) async {
+    final now = DateTime.now().toIso8601String();
+    final submissionResult = await db.transaction((txn) async {
       final submissionId = await txn.insert('submissions', {
         'assignment_id': assignmentId,
         'student_id': studentId,
-        'submitted_at': DateTime.now().toIso8601String(),
+        'submitted_at': now,
         'score': initialScore,
+        'updated_at': now,
       });
 
       for (final entry in answers.entries) {
@@ -906,10 +1116,31 @@ class DatabaseHelper {
           'submission_id': submissionId,
           'question_id': entry.key,
           'answer': entry.value,
+          'updated_at': now,
         });
       }
       return submissionId;
     });
+
+    // Sync to Firestore
+    _syncPush('submissions', {
+      'id': submissionResult,
+      'assignment_id': assignmentId,
+      'student_id': studentId,
+      'submitted_at': now,
+      'score': initialScore,
+      'updated_at': now,
+    });
+    for (final entry in answers.entries) {
+      _syncPush('student_answers', {
+        'submission_id': submissionResult,
+        'question_id': entry.key,
+        'answer': entry.value,
+        'updated_at': now,
+      });
+    }
+
+    return submissionResult;
   }
 
   Future<Map<String, dynamic>?> getStudentSubmission(
@@ -1037,12 +1268,31 @@ class DatabaseHelper {
       return count;
     }
     final db = await database;
-    return await db.update(
+    final now = DateTime.now().toIso8601String();
+    final count = await db.update(
       'submissions',
-      {'score': score, 'feedback': feedback},
+      {'score': score, 'feedback': feedback, 'updated_at': now},
       where: 'id = ?',
       whereArgs: [submissionId],
     );
+
+    // Sync to Firestore
+    if (count > 0) {
+      final updated = await db.query(
+        'submissions',
+        where: 'id = ?',
+        whereArgs: [submissionId],
+      );
+      if (updated.isNotEmpty) {
+        _syncPush(
+          'submissions',
+          updated.first,
+          syncId: updated.first['sync_id'] as String?,
+        );
+      }
+    }
+
+    return count;
   }
 
   Future<int> deleteAssignment(int assignmentId) async {
@@ -1059,12 +1309,29 @@ class DatabaseHelper {
       return count;
     }
     final db = await database;
-    // CASCADE will handle assignment_questions, submissions, student_answers
-    return await db.delete(
+    // Get sync_id before deleting
+    final existing = await db.query(
       'assignments',
       where: 'id = ?',
       whereArgs: [assignmentId],
     );
+    final syncId = existing.isNotEmpty
+        ? existing.first['sync_id'] as String?
+        : null;
+
+    // CASCADE will handle assignment_questions, submissions, student_answers
+    final count = await db.delete(
+      'assignments',
+      where: 'id = ?',
+      whereArgs: [assignmentId],
+    );
+
+    // Sync delete to Firestore
+    if (count > 0 && syncId != null) {
+      _syncDelete('assignments', syncId);
+    }
+
+    return count;
   }
 
   Future<int> deleteClass(int classId) async {
@@ -1081,8 +1348,29 @@ class DatabaseHelper {
       return count;
     }
     final db = await database;
+    // Get sync_id before deleting
+    final existing = await db.query(
+      'classes',
+      where: 'id = ?',
+      whereArgs: [classId],
+    );
+    final syncId = existing.isNotEmpty
+        ? existing.first['sync_id'] as String?
+        : null;
+
     // CASCADE will handle enrollments, assignments, and their child records
-    return await db.delete('classes', where: 'id = ?', whereArgs: [classId]);
+    final count = await db.delete(
+      'classes',
+      where: 'id = ?',
+      whereArgs: [classId],
+    );
+
+    // Sync delete to Firestore
+    if (count > 0 && syncId != null) {
+      _syncDelete('classes', syncId);
+    }
+
+    return count;
   }
 
   // --- P2P Sync Methods ---
@@ -1262,7 +1550,7 @@ class DatabaseHelper {
     required int studentId,
   }) async {
     if (kIsWeb) {
-      final int submissionId = DateTime.now().millisecondsSinceEpoch;
+      final int submissionId = _uniqueId();
       await _firestore.collection('submissions').add({
         'id': submissionId,
         'assignment_id': assignmentId,
@@ -1426,5 +1714,52 @@ class DatabaseHelper {
         }
       }
     }
+  }
+
+  // ─── AI Settings (SQLite) ───
+
+  /// Save AI settings (providers, active provider, locale) to SQLite
+  Future<void> saveAISettings({
+    required String userUid,
+    required String providersJson,
+    required String activeProvider,
+    required String locale,
+  }) async {
+    if (kIsWeb) return;
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+
+    await db.insert('ai_settings', {
+      'user_uid': userUid,
+      'providers_json': providersJson,
+      'active_provider': activeProvider,
+      'locale': locale,
+      'updated_at': now,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+
+    // Sync to Firestore
+    _syncPush('ai_settings', {
+      'user_uid': userUid,
+      'providers_json': providersJson,
+      'active_provider': activeProvider,
+      'locale': locale,
+      'updated_at': now,
+    });
+  }
+
+  /// Load AI settings from SQLite for the given Firebase UID
+  Future<Map<String, dynamic>?> loadAISettings({
+    required String userUid,
+  }) async {
+    if (kIsWeb) return null;
+    final db = await database;
+    final result = await db.query(
+      'ai_settings',
+      where: 'user_uid = ?',
+      whereArgs: [userUid],
+      limit: 1,
+    );
+    if (result.isEmpty) return null;
+    return result.first;
   }
 }

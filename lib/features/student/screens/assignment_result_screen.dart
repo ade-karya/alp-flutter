@@ -32,7 +32,7 @@ class _AssignmentResultScreenState extends State<AssignmentResultScreen> {
 
     final submission = await db.getStudentSubmission(
       widget.assignmentId,
-      user.id!,
+      user.effectiveId,
     );
     final assignmentData = await db.getAssignmentWithDetails(
       widget.assignmentId,

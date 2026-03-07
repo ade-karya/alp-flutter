@@ -153,7 +153,7 @@ Return ONLY a valid JSON array with this exact structure, no other text:
         if (_contentType == ContentType.multipleChoice) {
           questions.add(
             MultipleChoiceQuestion(
-              teacherId: user.id!,
+              teacherId: user.effectiveId,
               topic: _topicController.text,
               grade: _gradeController.text,
               questionText: item['question'] ?? '',
@@ -168,7 +168,7 @@ Return ONLY a valid JSON array with this exact structure, no other text:
         } else {
           questions.add(
             EssayQuestion(
-              teacherId: user.id!,
+              teacherId: user.effectiveId,
               topic: _topicController.text,
               grade: _gradeController.text,
               questionText: item['question'] ?? '',

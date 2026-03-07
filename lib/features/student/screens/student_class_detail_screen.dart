@@ -57,7 +57,7 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
       _assignments = await db.getAssignmentsForClass(widget.classId);
 
       for (final a in _assignments) {
-        final sub = await db.getStudentSubmission(a['id'], user.id!);
+        final sub = await db.getStudentSubmission(a['id'], user.effectiveId);
         if (sub != null) {
           _submissions[a['id']] = sub;
         }
