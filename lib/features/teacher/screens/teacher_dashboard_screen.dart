@@ -52,7 +52,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(this.context).showSnackBar(
           const SnackBar(
             content: Text('✅ Data berhasil disinkronkan'),
             duration: Duration(seconds: 2),
@@ -62,7 +62,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
-          context,
+          this.context,
         ).showSnackBar(SnackBar(content: Text('Gagal sinkronisasi: $e')));
       }
     } finally {

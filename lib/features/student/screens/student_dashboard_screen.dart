@@ -52,7 +52,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(this.context).showSnackBar(
           const SnackBar(
             content: Text('✅ Data berhasil disinkronkan'),
             duration: Duration(seconds: 2),
@@ -62,7 +62,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
-          context,
+          this.context,
         ).showSnackBar(SnackBar(content: Text('Gagal sinkronisasi: $e')));
       }
     } finally {
@@ -179,7 +179,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     )
                   : RefreshIndicator(
                       onRefresh: () => _performSync(context),
-                      color: isWizard ? const Color(0xFFFFD700) : Colors.blue,
+                      color: const Color(0xFFFFD700),
                       child: SingleChildScrollView(
                         physics: const AlwaysScrollableScrollPhysics(),
                         child: _buildMobileLayout(
